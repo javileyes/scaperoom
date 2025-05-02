@@ -1,0 +1,1 @@
+export { saveCurrentNpcContext, loadNpcContext } from './gameState.js';

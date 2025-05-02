@@ -1,0 +1,62 @@
+/* ────────────────────────────────────────────────────────────────
+   ASIR-Room-Escape  ·  Tema DARK  ·  Consola retro-terminal
+   Cada mensaje se pinta con una clase distinta: 
+   .game-message (narrador / entorno) 
+   .player-input (entrada del jugador) 
+   .ai-response  (NPCs / IA) 
+   .location-title (título de sala) 
+   .error-message (errores) 
+   .debug-info   (info de depuración)
+   ──────────────────────────────────────────────────────────────── */
+
+/* Fuente y esquema general */
+body{
+    font-family:'Consolas','Courier New',monospace;
+    background:#1e1e1e;          /* fondo gris-muy-oscuro */
+    color:#d4d4d4;               /* gris claro por defecto */
+    margin:0;padding:0;
+    display:flex;flex-direction:column;
+    height:100vh;font-size:14px;
+  }
+  
+  /* Contenedor principal */
+  #game-container{flex:1;display:flex;flex-direction:column;padding:15px;overflow:hidden}
+  
+  /* Área de texto desplazable */
+  #output{
+    flex:1;
+    background:#0a0a0a;          /* negro profundo */
+    border:1px solid #555;
+    padding:10px;
+    overflow-y:auto;
+    white-space:pre-wrap;word-wrap:break-word;
+    margin-bottom:10px;
+  }
+  
+  /* Márgenes y altura de línea comunes */
+  .output-line{margin-bottom:5px;line-height:1.4}
+  
+  /* Paleta de colores */
+  .player-input   {color:#9cdcfe;}   /* azul claro VS-Code */
+  .game-message   {color:#dcdcaa;}   /* amarillo pálido */
+  .ai-response    {color:#ce9178;}   /* naranja */
+  .location-title {color:#4ec9b0;font-weight:bold;
+                   margin:10px 0 5px;border-bottom:1px dashed #555;padding-bottom:5px}
+  .error-message  {color:#f44747;font-weight:bold;}
+  .debug-info     {color:#888;font-style:italic;font-size:.9em}
+  
+  /* Barra inferior de entrada */
+  #input-area{display:flex;border-top:1px solid #555;padding-top:10px}
+  #input-label{color:#569cd6;margin-right:5px;white-space:nowrap} /* azul brand VS-Code */
+  #input-field{
+    flex:1;
+    background:transparent;border:none;outline:none;
+    color:#d4d4d4;font:inherit;
+  }
+  #input-field:focus{caret-color:#d4d4d4}
+  
+  /* Scroll-bar (opcional, solo Chrome/Edge) */
+  #output::-webkit-scrollbar{width:8px}
+  #output::-webkit-scrollbar-track{background:#1e1e1e}
+  #output::-webkit-scrollbar-thumb{background:#555}
+  #output::-webkit-scrollbar-thumb:hover{background:#777}
