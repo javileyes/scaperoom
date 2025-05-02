@@ -28,3 +28,7 @@ export function updatePrompt(){
                      : 'Sistema';
   label.textContent = `${roomName} | ${who}> `;
 }
+
+export function scrollToBottom(){
+  outputDiv.scrollTop = outputDiv.scrollHeight;
+}

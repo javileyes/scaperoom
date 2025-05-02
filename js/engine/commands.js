@@ -3,7 +3,7 @@ import { state, getRoom, getObj, getNpc,
 import { OBJECTS }   from '../data/objects.js';
 import { NPCS }      from '../data/npcs.js';
 import { ROOMS }     from '../data/rooms.js';
-import { print, updatePrompt } from './ui.js';
+import { print, updatePrompt, scrollToBottom } from './ui.js';
 import { askLLM }    from './llm.js';
 import { underscoresToSpaces, spacesToUnderscores } from '../utils/helpers.js';
 
@@ -39,6 +39,7 @@ const stat = blocked?'[BLOQUEADA]':'';
 print(`  - ${OBJECTS[pas].nombre} → ${ROOMS[dest].nombre} ${stat}`);
 }
 print('====================');
+scrollToBottom();
 }
 
 /* --- examine ----------------------------------------------------------- */
@@ -72,6 +73,7 @@ if(state.puzzleStates[key]==='login_required' && data.mensaje_login)
 /* detalle nota */
 if(ref==='Nota_Profesor'&&state.inventory.includes(ref))
 print('\n--- Contenido ---\n'+data.contenido_detalle+'\n---------------');
+scrollToBottom();
 }
 
 /* --- take -------------------------------------------------------------- */
@@ -85,6 +87,7 @@ const obj = OBJECTS[ref];
 if(!obj.recogible){ print(`No puedes coger ${obj.nombre}.`);return; }
 state.inventory.push(ref);
 print(`Recoges: ${obj.nombre}`);
+scrollToBottom();
 }
 
 /* --- use (cables y nota) ------------------------------------------------ */
@@ -112,12 +115,15 @@ if(state.puzzleStates[k]==='offline_disconnected'){
 }else{
  print('No tiene efecto.');
 }
+scrollToBottom();
 return;
 }
 
 /* Nota – leerla */
 if(objRef==='Nota_Profesor'&&!targetRef){
 print('\n--- Contenido de la nota ---\n'+OBJECTS[objRef].contenido_detalle+'\n---------------------------');
+scrollToBottom();
+
 return;
 }
 
@@ -175,6 +181,7 @@ if(u?.trim()===cu && p?.trim()===cp){
 }
 
 if(!ok) print('No parece resolver nada.');
+scrollToBottom();
 }
 
 /* --- movement ----------------------------------------------------------- */
@@ -189,11 +196,13 @@ if(!ref){ print(`No hay salida '${name}'.`);return; }
 
 if(state.currentLocation==='Aula_Teoria' && !canLeaveAula()){
 print('Javier se interpone: «Necesitas acertar 3 preguntas antes de salir».');
+scrollToBottom();
 return;
 }
 
 if(state.puzzleStates[`${ref}_bloqueada`]){
 print(OBJECTS[ref].mensaje_bloqueo||'Está bloqueada.');
+scrollToBottom();
 return;
 }
 const dest=room.salidas[ref].destino;
@@ -209,6 +218,8 @@ if(room.salidas[p].destino===destRef && !state.puzzleStates[`${p}_bloqueada`]){
 }
 }
 print('No hay un camino abierto hasta allí.');
+scrollToBottom();
+
 }
 
 /* --- mover -------------------------------------------------------------- */
@@ -224,12 +235,51 @@ state.currentSystemPrompt = 'Eres un narrador...';
 state.conversationHistory = [];
 showLocation();
 updatePrompt();
+scrollToBottom();
 }
 
 /* ============ Entrada de texto principal =============================== */
 export async function process(raw){
 const cmd = raw.trim(); if(!cmd) return;
 print('> '+cmd,'player-input');
+
+// ── Auto‑talk si no es comando y hay NPCs ────────────────────────
+if(!cmd.startsWith('/')){
+  const room = getRoom();
+  const npcs = room.npcs || [];
+  if(npcs.length > 1){
+    print('hay varias personas en la habitación, usa /talk [persona] para hablar','game-message');
+    return;
+  }
+  if(npcs.length === 1){
+    // auto‑inicializamos diálogo sin doble saludo
+    const npcRef = npcs[0];
+    saveCurrentNpcContext();
+    state.currentNpcRef       = npcRef;
+    state.currentAiName       = NPCS[npcRef].nombre;
+    state.currentSystemPrompt = NPCS[npcRef].system_prompt;
+    loadNpcContext(npcRef);
+  
+    print(`\n--- Hablando con ${state.currentAiName} ---`,'location-title');
+    updatePrompt();
+    // enviamos el texto como mensaje al LLM y capturamos la respuesta
+    const llmAnswer = await askLLM(cmd);
+
+    // detectar hito de Javier en auto‑talk
+    if (state.currentNpcRef==='Javier_ProfesorRedes' &&
+        !state.puzzleStates['javier_passed'] &&
+        llmAnswer.includes('/hito preguntas_teoría superado')) {
+      state.puzzleStates['javier_passed'] = true;
+      print('Se oye un clic: la puerta del aula queda libre.');
+      scrollToBottom();
+    }
+    return;
+  }
+  // si no hay NPCs,
+  print('no hay nadie con quien hablar en la sala','game-message');
+  scrollToBottom();
+  return;
+}
 
 /* comandos barra ------------------------------------------------------- */
 if(cmd==='/exit'){ window.close(); return; }
@@ -245,9 +295,13 @@ if(cmd==='/help'){ /* imprimir ayuda */ print(
 /talk <npc>    – hablar con alguien
 /solve <text>  – resolver puzzle
 /inventory     – inventario
-/exit          – cerrar pestaña`, 'game-message'); return; }
+/exit          – cerrar pestaña`, 'game-message'); 
+scrollToBottom();
+return; }
+
 if(cmd==='/inventory'){ if(!state.inventory.length) print('Inventario vacío.');
 else{print('Llevas:');state.inventory.forEach(r=>print('  - '+OBJECTS[r].nombre));}
+scrollToBottom();
 return;}
 
 if(cmd.startsWith('/examine ')){ examine(cmd.slice(9)); return; }
