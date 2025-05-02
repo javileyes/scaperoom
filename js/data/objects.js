@@ -64,8 +64,22 @@ export const OBJECTS = {
     Manual_Ensamblaje:{tipo:'Item',recogible:false,nombre:'Manual de Ensamblaje',
       descripcion:'Cómo montar un PC paso a paso.'},
   
-    Manual_Cisco:{tipo:'Item',recogible:false,nombre:'Manual Cisco IOS',
-      descripcion:'Comandos IOS para configurar el switch.'},
+    Manual_Cisco: {
+      tipo:     'Item',
+      recogible:true,
+      nombre:   'Manual Cisco IOS',
+      descripcion:'Comandos IOS para configurar el switch.',
+      contenido_detalle:
+        '--- Comandos Cisco IOS básicos ---\n' +
+        'interface <INT>\n' +
+        '  switchport mode access\n' +
+        '  switchport access vlan <VLAN_ID>\n' +
+        'exit\n\n' +
+        'vlan <VLAN_ID>\n' +
+        '  name <VLAN_NAME>\n' +
+        'exit\n\n' +
+        '! Otras: show vlan brief | show interfaces status'
+    },
   
     Cable_Red_Suelto_En_Suelo:{tipo:'Item',recogible:true,nombre:'Cable de Red Suelto',
       descripcion:'UTP Cat6 azul, 2 m.'},

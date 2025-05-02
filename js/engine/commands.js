@@ -127,6 +127,12 @@ scrollToBottom();
 return;
 }
 
+if (objRef==='Manual_Cisco' && !targetRef) {
+  print('\n' + OBJECTS[objRef].contenido_detalle);
+  scrollToBottom();
+  return;
+}
+
 print('No ocurre nada.');
 }
 
