@@ -33,7 +33,7 @@ export const ROOMS = {
     Zona_Redes : {
       nombre:'Zona de Redes',
       descripcion:'Dominada por un armario rack de comunicaciones abierto...',
-      objetos:['Armario_Rack','Switch_Cisco','Router_Mikrotik','Patch_Panel','Portatil_Tecnico', 'Manual_Cisco'],
+      objetos:['Armario_Rack','Switch_Cisco','Patch_Panel','Portatil_Tecnico','Manual_Cisco'],
       npcs:['Tecnico_Estresado'],
       salidas:{ Conexion_Taller_Redes:{ destino:'Taller_Hardware'} }
     }

@@ -35,11 +35,9 @@ export const OBJECTS = {
     Armario_Rack:{tipo:'Decoracion',nombre:'Armario Rack',
       descripcion:'Contiene switches, routers y patch-panels.'},
   
-    Switch_Cisco:{tipo:'Decoracion',nombre:'Switch Cisco',
-      descripcion:'Switch Catalyst con leds verdes.'},
+    Switch_Cisco:{tipo:'Dispositivo',nombre:'Switch Cisco',
+      descripcion:'Switch Cisco con CLI IOS para configurar VLANs.'},
   
-    Router_Mikrotik:{tipo:'Decoracion',nombre:'Router Mikrotik',
-      descripcion:'Pequeño router (gateway principal).'},
   
     Patch_Panel:{tipo:'Decoracion',nombre:'Patch-Panel',
       descripcion:'Panel con decenas de RJ-45 etiquetados.'},

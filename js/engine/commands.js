@@ -92,10 +92,30 @@ scrollToBottom();
 
 /* --- use (cables y nota) ------------------------------------------------ */
 export function use(objName,targetName){
+// objetos estáticos (de la sala)
+const room = getRoom();
+// ── modo configuración Switch_Cisco ─────────────────────────────────
+if(!targetName && (objName.toLowerCase().includes('switch')||spacesToUnderscores(objName)==='Switch_Cisco')
+  && room.objetos?.includes('Switch_Cisco')) {
+ saveCurrentNpcContext();
+ state.currentNpcRef       = 'Switch_Cisco';
+ state.currentAiName       = 'Switch Cisco';
+ state.currentSystemPrompt = `Eres un Switch Cisco IOS. Comportate estrictamente como un switch Cisco IOS, empezando desde el terminal en modo no privilegiado. "Help" o "?" serán los comandos de ayuda, intenta imprimir solo los comandos más importantes y relacionados con la navegación como enable, exit, configure y también los relacionados con la configuración de interfaces y vlan y comando show".
+Debes comportarte estrictamente como un switch Cisco IOS, y no como un asistente IA. No debes dar información adicional ni ayudar al usuario a resolver el puzzle. El usuario debe configurar VLAN 10 para "alumnos" en puertos 1–20 y VLAN 20 para "profesores" en puertos 21–24.
+IMPORTANTE: Comprueba si el usuario consigue configurar VLAN 10 para "alumnos" en puertos 1–20 y VLAN 20 para "profesores" en puertos 21–24. Cuando el usuario consiga configurar ambas VLAN y las aplique a sus puertos, debes emitir EXACTAMENTE:
+"/hito configuración_router superado" y luego un breve mensaje de éxito.`;
+ state.conversationHistory = [];
+ print('\n--- Entras en modo configuración del Router Cisco IOS ---\nSwitch>','game-message');
+ scrollToBottom();
+ updatePrompt();
+ return;
+}
+
+
 const objRef = findRefByName(objName, Object.fromEntries(state.inventory.map(r=>[r,OBJECTS[r]])));
 if(!objRef){ print(`No tienes '${objName}'.`);return; }
 
-let targetRef=null; let room=getRoom();
+let targetRef=null; 
 if(targetName){
 targetRef = findRefByName(targetName,Object.fromEntries((room.objetos||[]).map(r=>[r,OBJECTS[r]])));
 if(!targetRef){ print(`No ves '${targetName}' aquí.`); return; }
@@ -248,6 +268,19 @@ scrollToBottom();
 export async function process(raw){
 const cmd = raw.trim(); if(!cmd) return;
 print('> '+cmd,'player-input');
+
+if(!cmd.startsWith('/') && state.currentNpcRef==='Switch_Cisco'){
+  // enviamos al LLM del router
+  const llmAnswer = await askLLM(cmd);
+  // detectar hito configuración_router
+  if(!state.puzzleStates['configuracion_switch'] &&
+     llmAnswer.includes('/hito configuración_switch superado')) {
+    state.puzzleStates['configuracion_switch'] = true;
+    print('Router Cisco: Configuración aceptada.','ai-response');
+    scrollToBottom();
+  }
+  return;
+}
 
 // ── Auto‑talk si no es comando y hay NPCs ────────────────────────
 if(!cmd.startsWith('/')){
