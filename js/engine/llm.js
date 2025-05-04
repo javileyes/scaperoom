@@ -1,8 +1,13 @@
 import { state }         from './gameState.js';
 import { ui, print }     from './ui.js';
 
-const LLM_URL = "http://localhost:8000/v1/chat/completions";
-
+//const LLM_URL = "http://localhost:8000/v1/chat/completions";
+function getLlmEndpoint() {
+  const el = document.getElementById('llm-url');
+  let base = (el?.value || '').trim() || 'http://localhost:8000';
+  base = base.replace(/\/+$/, '');
+  return `${base}/v1/chat/completions`;
+}
 /* Llamada stream a LM-Studio ------------------------------------------------ */
 export async function askLLM(userInput){
 
@@ -25,12 +30,10 @@ export async function askLLM(userInput){
   let full = '';
 
   try{
-    const res = await fetch(LLM_URL,{
+    const res = await fetch(getLlmEndpoint(), {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'qwen3-api',messages,temperature:0.7,max_tokens:1000,stream:true
-      })
+      body: JSON.stringify({ model:'qwen3-api', messages, temperature:0.7, max_tokens:1000, stream:true })
     });
     if(!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     const reader = res.body.getReader(); const decoder = new TextDecoder();

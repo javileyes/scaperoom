@@ -7,9 +7,16 @@
     <link rel="stylesheet" href="css/styles.css" />
 </head>
 
+<!-- ── Configuración LLM ──────────────────────────────────── -->
+<div id="llm-config" style="padding:5px; background:#252526; color:#d4d4d4; border-bottom:1px solid #555;">
+<label for="llm-url">LLM URL:</label>
+<input id="llm-url" type="text" value="http://localhost:8000"
+        style="width:250px; margin-left:5px; background:#1e1e1e; color:#d4d4d4; border:1px solid #555;"/>
+</div>
+
 <body>
     <div id="game-container">
-        <div id="output"><div class="output-line game-message">Cargando juego…</div></div>
+        <div id="output"></div>
 
         <div id="input-area">
             <span id="input-label">Estudiante&gt;</span>
