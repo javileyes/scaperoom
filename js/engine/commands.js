@@ -288,6 +288,7 @@ export async function talk(name) {
 
   state.conversationHistory.push({ role: 'assistant', content: saludo });
   updatePrompt();
+  scrollToBottom();
 }
 
 
@@ -417,15 +418,105 @@ export async function process(raw) {
   print('> ' + cmd, 'player-input');
 
   // modo configuración Switch Cisco
-  if (
-    !cmd.startsWith('/') &&
-    state.currentNpcRef === 'Switch_Cisco'
-  ) {
+  // if (
+  //   !cmd.startsWith('/') &&
+  //   state.currentNpcRef === 'Switch_Cisco'
+  // ) {
+  //   const llmAnswer = await askLLM(cmd);
+  //   if (
+  //     !state.puzzleStates['configuracion_switch'] &&
+  //     llmAnswer.includes('/hito configuración_switch superado')
+  //   ) {
+  //     state.puzzleStates['configuracion_switch'] = true;
+  //     print('Switch Cisco: Configuración aceptada.', 'ai-response');
+  //     scrollToBottom();
+  //   }
+  //   return;
+  // }
+
+
+  // comandos con '/'
+  // ── 1) SLASH commands ─────────────────────────────────────────
+  if (cmd.startsWith('/')) {  
+    if (cmd.startsWith('/look ')) {
+      showLocation();
+      return;
+    }
+
+    if (cmd.startsWith('/help')) {
+      print(
+  `Comandos:
+  /look          – describir sala
+  /go <lugar>    – ir a una sala conectada
+  /cross <salida>– cruzar por pasarela concreta
+  /examine <obj> – examinar algo
+  /take <obj>    – coger objeto
+  /use <obj> [on <dest>] – usar
+  /talk <npc>    – hablar con alguien
+  /solve <texto> – resolver puzzle
+  /inventory     – inventario`,
+        'game-message'
+      );
+      scrollToBottom();
+      return;
+    }
+    if (cmd === '/inventory') {
+      if (!state.inventory.length) {
+        print('Inventario vacío.', 'game-message');
+      } else {
+        print('Llevas:', 'game-message');
+        state.inventory.forEach(r => print('  - ' + OBJECTS[r].nombre, 'game-message'));
+      }
+      scrollToBottom();
+      return;
+    }
+
+    if (cmd.startsWith('/examine ')) {
+      examine(cmd.slice(9));
+      return;
+    }
+    if (cmd.startsWith('/take ')) {
+      take(cmd.slice(6));
+      return;
+    }
+    if (cmd.startsWith('/use ')) {
+      const [obj, dest] = cmd.slice(5).split(' on ');
+      use(obj.trim(), dest?.trim());
+      return;
+    }
+    if (cmd.startsWith('/talk ')) {
+      talk(cmd.slice(6));
+      return;
+    }
+    if (cmd.startsWith('/solve ')) {
+      solve(cmd.slice(7));
+      return;
+    }
+    if (cmd.startsWith('/go ')) {
+      go(cmd.slice(4));
+      return;
+    }
+    if (cmd.startsWith('/cross ')) {
+      cross(cmd.slice(7));
+      return;
+    }
+
+  }
+
+   // ── 2) MODO CONVERSACIÓN NPC ───────────────────────────────────
+   if (state.currentNpcRef) {
+    // Va al LLM del NPC activo
     const llmAnswer = await askLLM(cmd);
-    if (
-      !state.puzzleStates['configuracion_switch'] &&
-      llmAnswer.includes('/hito configuración_switch superado')
-    ) {
+    // Aquí puedes manejar hitos como antes, p.e.:
+    if (state.currentNpcRef==='Javier_ProfesorRedes' &&
+        !state.puzzleStates['javier_passed'] &&
+        llmAnswer.includes('/hito preguntas_teoría superado')) {
+      state.puzzleStates['javier_passed'] = true;
+      print('Se oye un clic: la puerta del aula queda libre.');
+      scrollToBottom();
+    }
+    else if (state.currentNpcRef==='Switch_Cisco' &&
+             llmAnswer.includes('/hito configuración_switch superado')) {
       state.puzzleStates['configuracion_switch'] = true;
       print('Switch Cisco: Configuración aceptada.', 'ai-response');
       scrollToBottom();
@@ -433,114 +524,10 @@ export async function process(raw) {
     return;
   }
 
-  // auto-talk
-  if (!cmd.startsWith('/')) {
-    const room = getRoom();
-    const npcs = room.npcs || [];
-
-    if (npcs.length > 1) {
-      print(
-        'hay varias personas en la habitación, usa /talk [persona] para hablar',
-        'game-message'
-      );
-      return;
-    }
-
-    if (npcs.length === 1) {
-      const npcRef = npcs[0];
-      saveCurrentNpcContext();
-      state.currentNpcRef       = npcRef;
-      state.currentAiName       = NPCS[npcRef].nombre;
-      state.currentSystemPrompt = NPCS[npcRef].system_prompt;
-      loadNpcContext(npcRef);
-
-      print(
-        `\n--- Hablando con ${state.currentAiName} ---`,
-        'location-title'
-      );
-      updatePrompt();
-
-      const llmAnswer = await askLLM(cmd);
-      if (
-        state.currentNpcRef === 'Javier_ProfesorRedes' &&
-        !state.puzzleStates['javier_passed'] &&
-        llmAnswer.includes('/hito preguntas_teoría superado')
-      ) {
-        state.puzzleStates['javier_passed'] = true;
-        print('Se oye un clic: la puerta del aula queda libre.');
-        scrollToBottom();
-      }
-      return;
-    }
-
-    print('no hay nadie con quien hablar en la sala', 'game-message');
-    scrollToBottom();
-    return;
-  }
-
-  // comandos con '/'
-  if (cmd.startsWith('/look ')) {
-    showLocation();
-    return;
-  }
-
-  if (cmd.startsWith('/help')) {
-    print(
-`Comandos:
-/look          – describir sala
-/go <lugar>    – ir a una sala conectada
-/cross <salida>– cruzar por pasarela concreta
-/examine <obj> – examinar algo
-/take <obj>    – coger objeto
-/use <obj> [on <dest>] – usar
-/talk <npc>    – hablar con alguien
-/solve <texto> – resolver puzzle
-/inventory     – inventario`,
-      'game-message'
-    );
-    scrollToBottom();
-    return;
-  }
-  if (cmd === '/inventory') {
-    if (!state.inventory.length) {
-      print('Inventario vacío.', 'game-message');
-    } else {
-      print('Llevas:', 'game-message');
-      state.inventory.forEach(r => print('  - ' + OBJECTS[r].nombre, 'game-message'));
-    }
-    scrollToBottom();
-    return;
-  }
-
-  if (cmd.startsWith('/examine ')) {
-    examine(cmd.slice(9));
-    return;
-  }
-  if (cmd.startsWith('/take ')) {
-    take(cmd.slice(6));
-    return;
-  }
-  if (cmd.startsWith('/use ')) {
-    const [obj, dest] = cmd.slice(5).split(' on ');
-    use(obj.trim(), dest?.trim());
-    return;
-  }
-  if (cmd.startsWith('/talk ')) {
-    talk(cmd.slice(6));
-    return;
-  }
-  if (cmd.startsWith('/solve ')) {
-    solve(cmd.slice(7));
-    return;
-  }
-  if (cmd.startsWith('/go ')) {
-    go(cmd.slice(4));
-    return;
-  }
-  if (cmd.startsWith('/cross ')) {
-    cross(cmd.slice(7));
-    return;
-  }
-
-
-}
+  // ── 3) SIN COMANDO NI NPC ──────────────────────────────────────
+  print(
+    'Para hablar, usa /talk [persona] para iniciar conversación.',
+    'game-message'
+  );
+  scrollToBottom();
+} 
