@@ -45,9 +45,9 @@ export const OBJECTS = {
     Portatil_Tecnico:{tipo:'Decoracion',nombre:'Portátil del Técnico',
       descripcion:'Consola abierta; el técnico no te deja tocar.'},
   
-    Nota_Profesor:{tipo:'Item',recogible:true,nombre:'Nota del Profesor',
+    Nota_Profesor:{tipo:'Item',recogible:true, oculto:true, nombre:'Nota del Profesor',
       descripcion:'Un post-it amarillo.', contenido_detalle:
-        'Recordatorio: la subred de gestión es la primera subred utilizable de una red privada clase C /24.'},
+        'Recordatorio: la subred de gestión es la primera subred utilizable de una red privada clase C /24.'},       // esta nota empieza oculta
   
     SRV_DC01:{tipo:'Dispositivo',nombre:'Servidor SRV-DC01',
       descripcion:'Servidor HP ProLiant 2U con luz roja parpadeando.',

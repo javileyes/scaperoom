@@ -25,8 +25,17 @@ const room = getRoom();
 print(`\n=== ${room.nombre} ===`,'location-title');
 print(room.descripcion);
 
-const objs = (room.objetos||[]).filter(r=>!state.inventory.includes(r)&&OBJECTS[r]?.tipo!=='Pasarela');
-if(objs.length){print('\nObservas:'); objs.forEach(r=>print('  - '+OBJECTS[r].nombre));}
+// sólo objetos visibles y no en inventario
+const objs = (room.objetos||[])
+  .filter(r=>
+    !state.inventory.includes(r) &&
+    OBJECTS[r]?.tipo!=='Pasarela' &&
+    !OBJECTS[r]?.oculto
+  );
+if(objs.length){
+  print('\nObservas:');
+  objs.forEach(r=>print('  - '+OBJECTS[r].nombre));
+}
 
 const npcs = room.npcs||[];
 if(npcs.length){print('\nVes a:'); npcs.forEach(r=>print('  - '+NPCS[r].nombre));}
@@ -44,39 +53,53 @@ scrollToBottom();
 
 /* --- examine ----------------------------------------------------------- */
 export function examine(name){
-const room   = getRoom();
-const search = {};
-(room.objetos||[]).forEach(r=>search[r]=OBJECTS[r]);
-(room.npcs  ||[]).forEach(r=>search[r]=NPCS[r]);
+  const room = getRoom();
+  const search = {};
+  (room.objetos||[]).forEach(r=>search[r]=OBJECTS[r]);
+  (room.npcs  ||[]).forEach(r=>search[r]=NPCS[r]);
+  state.inventory.forEach(r=>search[r]=OBJECTS[r]);
 
-let ref = findRefByName(name,search);
-if(!ref){
-state.inventory.forEach(r=>search[r]=OBJECTS[r]);
-ref = findRefByName(name,search);
-}
-if(!ref){ 
-  print(`No ves '${name}' por aquí.`);
+  const ref = findRefByName(name,search);
+  if(!ref){
+    print(`No ves '${name}' por aquí.`);
+    scrollToBottom();
+    return;
+  }
+  const data = search[ref];
+  const prefix = data.rol ? 'Observas a' : 'Examinas';
+  print(`${prefix} ${data.nombre}: ${data.descripcion}`);
+
+  // ── descubrir ocultos al examinar la Mesa ───────────────────────────
+  if(ref==='Mesa_Profesor'){
+    room.objetos.forEach(oRef=>{
+      if(OBJECTS[oRef].oculto){
+        OBJECTS[oRef].oculto = false;
+        print(`Al mover papeles, encuentras: ${OBJECTS[oRef].nombre}.`);
+      }
+    });
+  }
+
+  // ── siempre mostrar contenido de la nota ────────────────────────────
+  if(ref==='Nota_Profesor'){
+    print('\n--- Contenido de la nota ---');
+    print(data.contenido_detalle);
+    print('---------------------------');
+  }
+
+  if(data.tipo==='Pasarela' && state.puzzleStates[`${ref}_bloqueada`])
+  print(data.mensaje_bloqueo||'Parece bloqueada.');
+
+  if(data.tipo==='Dispositivo'){
+  const key = `${ref}_estado`;
+  if(state.puzzleStates[key]) print(`Estado actual: ${state.puzzleStates[key]}`);
+  if(state.puzzleStates[key]==='login_required' && data.mensaje_login)
+  print(data.mensaje_login);
+  }
+
+  /* detalle nota */
+  if(ref==='Nota_Profesor'&&state.inventory.includes(ref))
+  print('\n--- Contenido ---\n'+data.contenido_detalle+'\n---------------');
   scrollToBottom();
-  return; }
-
-const data = search[ref];
-const prefix = data.rol?'Observas a':'Examinas';
-print(`${prefix} ${data.nombre}: ${data.descripcion}`);
-
-if(data.tipo==='Pasarela' && state.puzzleStates[`${ref}_bloqueada`])
-print(data.mensaje_bloqueo||'Parece bloqueada.');
-
-if(data.tipo==='Dispositivo'){
-const key = `${ref}_estado`;
-if(state.puzzleStates[key]) print(`Estado actual: ${state.puzzleStates[key]}`);
-if(state.puzzleStates[key]==='login_required' && data.mensaje_login)
- print(data.mensaje_login);
-}
-
-/* detalle nota */
-if(ref==='Nota_Profesor'&&state.inventory.includes(ref))
-print('\n--- Contenido ---\n'+data.contenido_detalle+'\n---------------');
-scrollToBottom();
 }
 
 /* --- take -------------------------------------------------------------- */

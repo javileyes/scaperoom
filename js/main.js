@@ -41,17 +41,19 @@ function populateTargets(){
       });
     }
     else {
-      // default: objetos en sala, inventario y NPCs
-      (room.objetos||[]).forEach(r=>{
-        if(!state.inventory.includes(r))
-          opts.push({ref:r, label:OBJECTS[r].nombre});
+      // default: objetos visibles en sala, inventario y NPCs
+      (room.objetos||[])
+        .filter(ref => !OBJECTS[ref]?.oculto)         // <-- filtramos ocultos
+        .forEach(ref => opts.push({ref, label:OBJECTS[ref].nombre}));
+
+      state.inventory.forEach(ref => {
+        // si tuviera ocultos en inventario (no debería), los mostramos igualmente
+        opts.push({ref, label:OBJECTS[ref].nombre});
       });
-      state.inventory.forEach(r=>{
-        opts.push({ref:r, label:OBJECTS[r].nombre});
-      });
-      (room.npcs||[]).forEach(r=>{
-        opts.push({ref:r, label:NPCS[r].nombre});
-      });
+
+      (room.npcs||[]).forEach(ref => 
+        opts.push({ref, label:NPCS[ref].nombre})
+      );
     }
   
     // cabecera en blanco + opciones
@@ -60,7 +62,7 @@ function populateTargets(){
       opts.map(o=>`<option value="${o.ref}">${o.label}</option>`).join('');
     ui.targetSelect.value = '';
     ui.targetSelect.disabled = opts.length===0;
-    ui.targetSelect.size = ACTIONS.length;
+    ui.targetSelect.size = opts.length;
   }
 
 function initSelectors(){
