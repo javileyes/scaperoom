@@ -68,32 +68,34 @@ export function examine(name){
   const data = search[ref];
   const prefix = data.rol ? 'Observas a' : 'Examinas';
   print(`${prefix} ${data.nombre}: ${data.descripcion}`);
-
-  // ── descubrir ocultos al examinar la Mesa ───────────────────────────
-  if(ref==='Mesa_Profesor'){
-    room.objetos.forEach(oRef=>{
-      if(OBJECTS[oRef].oculto){
-        OBJECTS[oRef].oculto = false;
-        print(`Al mover papeles, encuentras: ${OBJECTS[oRef].nombre}.`);
-      }
-    });
+  // ── contenido detallado genérico ────────────────────────────
+  if(data.contenido_detalle){
+    print('\n--- Detalle ---');
+    print(data.contenido_detalle);
+    print('----------------');
   }
 
-  // ── siempre mostrar contenido de la nota ────────────────────────────
-  if(ref==='Nota_Profesor'){
-    print('\n--- Contenido de la nota ---');
-    print(data.contenido_detalle);
-    print('---------------------------');
+  // ── genérico: si este objeto tiene 'contenidos', descubre cada uno ──
+  if(Array.isArray(data.contenidos)){
+    data.contenidos.forEach(oRef=>{
+      if(OBJECTS[oRef].oculto){
+        OBJECTS[oRef].oculto = false;
+        // ── añadirlo a la sala para que aparezca en room.objetos ──
+        const room = getRoom();
+        if (!room.objetos.includes(oRef)) room.objetos.push(oRef);
+        print(`Al examinar ${data.nombre}, encuentras: ${OBJECTS[oRef].nombre}.`);
+      }
+    });
   }
 
   if(data.tipo==='Pasarela' && state.puzzleStates[`${ref}_bloqueada`])
   print(data.mensaje_bloqueo||'Parece bloqueada.');
 
   if(data.tipo==='Dispositivo'){
-  const key = `${ref}_estado`;
-  if(state.puzzleStates[key]) print(`Estado actual: ${state.puzzleStates[key]}`);
-  if(state.puzzleStates[key]==='login_required' && data.mensaje_login)
-  print(data.mensaje_login);
+    const key = `${ref}_estado`;
+    if(state.puzzleStates[key]) print(`Estado actual: ${state.puzzleStates[key]}`);
+    if(state.puzzleStates[key]==='login_required' && data.mensaje_login)
+    print(data.mensaje_login);
   }
 
   /* detalle nota */

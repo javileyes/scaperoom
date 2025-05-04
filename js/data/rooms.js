@@ -3,7 +3,7 @@ export const ROOMS = {
     Aula_Teoria : {
       nombre : 'Aula de Teoría',
       descripcion : 'Una típica aula de instituto con mesas individuales desgastadas, una pizarra blanca... ',
-      objetos : ['Nota_Profesor','Pizarra_Blanca','Proyector_Techo','Mesa_Profesor'],
+      objetos : ['Pizarra_Blanca','Proyector_Techo','Mesa_Profesor'],
       npcs    : ['Javier_ProfesorRedes'],     // Asistente IA eliminado
       salidas : {
         Puerta_Aula_Servidores : { destino:'Cuarto_Servidores' },
