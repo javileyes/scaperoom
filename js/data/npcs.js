@@ -12,7 +12,10 @@ export const NPCS = {
   Llevas la cuenta de los aciertos. Cuando el alumno logre TRES respuestas correctas,
   escribe EXACTAMENTE "/hito preguntas_teoría superado" y luego una frase breve
   dejando salir. Mientras no lo consiga, no permitas que se marche ni desveles
-  las respuestas correctas.`
+  las respuestas correctas.`,
+      milestones: {
+        '/hito preguntas_teoría superado': 'javier_passed'
+      }
     },
   
     /* --- NPC ya existente: Raúl -------------------------------- */

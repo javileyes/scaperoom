@@ -503,26 +503,31 @@ export async function process(raw) {
 
   }
 
-   // ── 2) MODO CONVERSACIÓN NPC ───────────────────────────────────
-   if (state.currentNpcRef) {
-    // Va al LLM del NPC activo
+  // ── 2) MODO CONVERSACIÓN NPC ───────────────────────────────────
+  if (state.currentNpcRef) {
     const llmAnswer = await askLLM(cmd);
-    // Aquí puedes manejar hitos como antes, p.e.:
-    if (state.currentNpcRef==='Javier_ProfesorRedes' &&
-        !state.puzzleStates['javier_passed'] &&
-        llmAnswer.includes('/hito preguntas_teoría superado')) {
-      state.puzzleStates['javier_passed'] = true;
-      print('Se oye un clic: la puerta del aula queda libre.');
-      scrollToBottom();
-    }
-    else if (state.currentNpcRef==='Switch_Cisco' &&
-             llmAnswer.includes('/hito configuración_switch superado')) {
-      state.puzzleStates['configuracion_switch'] = true;
-      print('Switch Cisco: Configuración aceptada.', 'ai-response');
-      scrollToBottom();
+
+    // procesar cualquier hito definido en el NPC activo
+    const npcDef = NPCS[state.currentNpcRef];
+    if (npcDef?.milestones) {
+      for (const [hito, psKey] of Object.entries(npcDef.milestones)) {
+        if (!state.puzzleStates[psKey] && llmAnswer.includes(hito)) {
+          state.puzzleStates[psKey] = true;
+          print(`Puzzle "${psKey}" desbloqueado.`, 'game-message');
+          scrollToBottom();
+        }
+      }
     }
     return;
   }
+    
+    // if (state.currentNpcRef==='Switch_Cisco' &&
+    //          llmAnswer.includes('/hito configuración_switch superado')) {
+    //   state.puzzleStates['configuracion_switch'] = true;
+    //   print('Switch Cisco: Configuración aceptada.', 'ai-response');
+    //   scrollToBottom();
+    // }
+   
 
   // ── 3) SIN COMANDO NI NPC ──────────────────────────────────────
   print(
