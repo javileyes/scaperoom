@@ -54,7 +54,10 @@ if(!ref){
 state.inventory.forEach(r=>search[r]=OBJECTS[r]);
 ref = findRefByName(name,search);
 }
-if(!ref){ print(`No ves '${name}' por aquí.`); return; }
+if(!ref){ 
+  print(`No ves '${name}' por aquí.`);
+  scrollToBottom();
+  return; }
 
 const data = search[ref];
 const prefix = data.rol?'Observas a':'Examinas';
@@ -84,7 +87,10 @@ if(!ref||!room.objetos?.includes(ref)){ print(`No hay '${name}' aquí para coger
 if(state.inventory.includes(ref)){ print('Ya lo tienes.');return; }
 
 const obj = OBJECTS[ref];
-if(!obj.recogible){ print(`No puedes coger ${obj.nombre}.`);return; }
+if(!obj.recogible){ 
+  print(`No puedes coger ${obj.nombre}.`);
+  scrollToBottom();
+  return; }
 state.inventory.push(ref);
 print(`Recoges: ${obj.nombre}`);
 scrollToBottom();
@@ -113,7 +119,11 @@ IMPORTANTE: Comprueba si el usuario consigue configurar VLAN 10 para "alumnos" e
 
 
 const objRef = findRefByName(objName, Object.fromEntries(state.inventory.map(r=>[r,OBJECTS[r]])));
-if(!objRef){ print(`No tienes '${objName}'.`);return; }
+if(!objRef){ 
+  print(`No tienes '${objName}'.`);
+  scrollToBottom();
+  return;
+}
 
 let targetRef=null; 
 if(targetName){
@@ -154,6 +164,7 @@ if (objRef==='Manual_Cisco' && !targetRef) {
 }
 
 print('No ocurre nada.');
+scrollToBottom();
 }
 
 /* --- talk -------------------------------------------------------------- */
@@ -321,7 +332,7 @@ if(!cmd.startsWith('/')){
 }
 
 /* comandos barra ------------------------------------------------------- */
-if(cmd==='/exit'){ window.close(); return; }
+// if(cmd==='/exit'){ window.close(); return; }
 if(cmd==='/look'){ showLocation(); return; }
 if(cmd==='/help'){ /* imprimir ayuda */ print(
 `Comandos:
@@ -333,8 +344,7 @@ if(cmd==='/help'){ /* imprimir ayuda */ print(
 /use <obj> [on <dest>] – usar
 /talk <npc>    – hablar con alguien
 /solve <text>  – resolver puzzle
-/inventory     – inventario
-/exit          – cerrar pestaña`, 'game-message'); 
+/inventory     – inventario`, 'game-message'); 
 scrollToBottom();
 return; }
 

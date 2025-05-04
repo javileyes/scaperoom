@@ -6,8 +6,13 @@ const outputDiv = document.getElementById('output');
 const inputFld  = document.getElementById('input-field');
 const label     = document.getElementById('input-label');
 const urlFld    = document.getElementById('llm-url');
-export const ui = { outputDiv, inputFld, label, urlFld  };
+const actionSelect = document.getElementById('action-select');
+const targetSelect = document.getElementById('target-select');
 
+export const ui = {
+  outputDiv, inputFld, label, urlFld,
+  actionSelect, targetSelect
+};
 /* --- print --------------------------------------------------------------- */
 export function print(msg,type='game-message'){
   const line = document.createElement('div');
