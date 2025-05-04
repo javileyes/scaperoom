@@ -62,7 +62,7 @@ function populateTargets(){
       opts.map(o=>`<option value="${o.ref}">${o.label}</option>`).join('');
     ui.targetSelect.value = '';
     ui.targetSelect.disabled = opts.length===0;
-    ui.targetSelect.size = opts.length;
+    ui.targetSelect.size = opts.length + 1;
   }
 
 function initSelectors(){
