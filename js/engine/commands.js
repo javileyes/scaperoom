@@ -9,7 +9,7 @@ import {
 import { OBJECTS } from '../data/objects.js';
 import { NPCS }    from '../data/npcs.js';
 import { ROOMS }   from '../data/rooms.js';
-import { print, updatePrompt, scrollToBottom } from './ui.js';
+import { print, updatePrompt, scrollToBottom, updateDebug } from './ui.js';
 import { askLLM }  from './llm.js';
 import { underscoresToSpaces, spacesToUnderscores } from '../utils/helpers.js';
 
@@ -281,6 +281,8 @@ export async function talk(name) {
   state.conversationHistory.push({ role: 'assistant', content: saludo });
   updatePrompt();
   scrollToBottom();
+  // forzamos refresco de debug
+  if (window.depuracion) updateDebug();
 }
 
 
@@ -498,6 +500,8 @@ export async function process(raw) {
   // ── 2) MODO CONVERSACIÓN NPC o SISTEMA ──────────────────────────
   if (state.currentNpcRef) {
     const llmAnswer = await askLLM(cmd);
+    // forzamos refresco de debug
+    if (window.depuracion) updateDebug();
 
     // procesar cualquier hito definido en NPCS o en OBJECTS
     const def = NPCS[state.currentNpcRef] || OBJECTS[state.currentNpcRef];
