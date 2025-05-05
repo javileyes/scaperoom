@@ -262,26 +262,27 @@ export function use(objName, targetName) {
 export async function talk(name) {
   const room   = getRoom();
   const npcRef = findRefByName(name, NPCS);
-
-  if (!npcRef || !room.npcs?.includes(npcRef)) {
+  if (!npcRef || !room.npcs.includes(npcRef)) {
     print(`No ves a '${name}' aquí.`);
     return;
   }
 
+  const npc    = NPCS[npcRef];
+  // escogemos el primer diálogo cuyo `superado` aún no está true
+  const dialog = npc.dialogues.find(d =>
+    d.superado === false || !state.puzzleStates[d.superado]
+  );
+
   saveCurrentNpcContext();
   state.currentNpcRef       = npcRef;
-  state.currentAiName       = NPCS[npcRef].nombre;
-  state.currentSystemPrompt = NPCS[npcRef].system_prompt;
+  state.currentAiName       = npc.nombre;
+  state.currentSystemPrompt = dialog.system_prompt;
   loadNpcContext(npcRef);
 
-  const saludo = NPCS[npcRef].saludo;
-  print(`\n--- Hablando con ${state.currentAiName} ---`, 'location-title');
-  print(`${state.currentAiName}: ${saludo}`, 'ai-response');
-
-  state.conversationHistory.push({ role: 'assistant', content: saludo });
-  updatePrompt();
-  scrollToBottom();
-  // forzamos refresco de debug
+  print(`\n--- Hablando con ${npc.nombre} ---`, 'location-title');
+  print(`${npc.nombre}: ${dialog.saludo}`, 'ai-response');
+  state.conversationHistory.push({ role:'assistant', content:dialog.saludo });
+  updatePrompt(); scrollToBottom();
   if (window.depuracion) updateDebug();
 }
 
@@ -499,11 +500,10 @@ export async function process(raw) {
 
   // ── 2) MODO CONVERSACIÓN NPC o SISTEMA ──────────────────────────
   if (state.currentNpcRef) {
-    const llmAnswer = await askLLM(cmd);
-    // forzamos refresco de debug
+    const llmAnswer = await askLLM(raw.trim());
     if (window.depuracion) updateDebug();
-
-    // procesar cualquier hito definido en NPCS o en OBJECTS
+  
+    // procesar hitos genéricos
     const def = NPCS[state.currentNpcRef] || OBJECTS[state.currentNpcRef];
     if (def?.milestones) {
       for (const [hito, psKey] of Object.entries(def.milestones)) {

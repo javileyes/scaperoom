@@ -27,7 +27,7 @@ export function initializePuzzleStates(){
 
   s['raul_asked_sql'] = false;
   s['raul_gave_credentials'] = false;
-  s['javier_passed'] = true;
+  s['javier_passed'] = false;
   s['configuracion_switch'] = false;
 
   return s;
