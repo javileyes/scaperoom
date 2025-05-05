@@ -49,8 +49,24 @@ export const OBJECTS = {
     Armario_Rack:{tipo:'Decoracion',nombre:'Armario Rack',
       descripcion:'Contiene switches, routers y patch-panels.'},
   
-    Switch_Cisco:{tipo:'Dispositivo',nombre:'Switch Cisco',
-      descripcion:'Switch Cisco con CLI IOS para configurar VLANs.'},
+    Switch_Cisco: {
+      tipo:        'Dispositivo',
+      nombre:      'Switch Cisco',
+      descripcion: 'Switch Cisco con CLI IOS para configurar VLANs.',
+      sistema:     true,   // ← nuevo flag
+      system_prompt: `Eres un Switch Cisco IOS. 
+  Compórtate estrictamente como un switch Cisco IOS, empezando 
+  desde el terminal en modo no privilegiado. "Help" o "?" son 
+  los comandos de ayuda. Sólo muestra comandos de navegación 
+  (enable, exit, configure) y de VLAN/interfaces. 
+  OJO: no puedes ayudar al usuario a resolver el puzzle, comportáte como un switch real.
+  IMPORTANTE: Al configurar VLAN 10 para "alumnos" en puertos 1–20 
+  y VLAN 20 para "profesores" en puertos 21–24, 
+  debes emitir "/hito configuración_switch superado".`,
+      milestones: {
+        '/hito configuración_switch superado': 'configuracion_switch'
+      }
+    },
   
   
     Patch_Panel:{tipo:'Decoracion',nombre:'Patch-Panel',

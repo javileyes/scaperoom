@@ -171,26 +171,18 @@ export function take(name) {
 export function use(objName, targetName) {
   const room = getRoom();
 
-  // configuración Switch Cisco
-  if (!targetName &&
-      (objName.toLowerCase().includes('switch') ||
-       spacesToUnderscores(objName) === 'Switch_Cisco') &&
-      room.objetos?.includes('Switch_Cisco')) {
-
+  // ── conversación con sistemas (/use sobre un objeto.sistema) ───────
+  const sysRef = findRefByName(
+    objName,
+    Object.fromEntries((room.objetos||[]).map(r => [r, OBJECTS[r]]))
+  );
+  if (!targetName && sysRef && OBJECTS[sysRef].sistema) {
     saveCurrentNpcContext();
-    state.currentNpcRef       = 'Switch_Cisco';
-    state.currentAiName       = 'Switch Cisco';
-    state.currentSystemPrompt = `Eres un Switch Cisco IOS. \
-Compórtate estrictamente como un switch Cisco IOS, empezando \
-desde el terminal en modo no privilegiado. "Help" o "?" son \
-los comandos de ayuda. Sólo muestra comandos de navegación \
-(enable, exit, configure) y de VLAN/interfaces. \
-IMPORTANTE: Al configurar VLAN 10 para "alumnos" en puertos 1–20 \
-y VLAN 20 para "profesores" en puertos 21–24, \
-debes emitir "/hito configuración_switch superado".`;
-
+    state.currentNpcRef       = sysRef;
+    state.currentAiName       = OBJECTS[sysRef].nombre;
+    state.currentSystemPrompt = OBJECTS[sysRef].system_prompt;
     state.conversationHistory = [];
-    print('\n--- Entras en modo configuración del Switch Cisco IOS ---', 'game-message');
+    print(`\n--- Entras en modo configuración de ${state.currentAiName} ---`, 'game-message');
     updatePrompt();
     scrollToBottom();
     return;
@@ -503,14 +495,14 @@ export async function process(raw) {
 
   }
 
-  // ── 2) MODO CONVERSACIÓN NPC ───────────────────────────────────
+  // ── 2) MODO CONVERSACIÓN NPC o SISTEMA ──────────────────────────
   if (state.currentNpcRef) {
     const llmAnswer = await askLLM(cmd);
 
-    // procesar cualquier hito definido en el NPC activo
-    const npcDef = NPCS[state.currentNpcRef];
-    if (npcDef?.milestones) {
-      for (const [hito, psKey] of Object.entries(npcDef.milestones)) {
+    // procesar cualquier hito definido en NPCS o en OBJECTS
+    const def = NPCS[state.currentNpcRef] || OBJECTS[state.currentNpcRef];
+    if (def?.milestones) {
+      for (const [hito, psKey] of Object.entries(def.milestones)) {
         if (!state.puzzleStates[psKey] && llmAnswer.includes(hito)) {
           state.puzzleStates[psKey] = true;
           print(`Puzzle "${psKey}" desbloqueado.`, 'game-message');
