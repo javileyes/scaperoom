@@ -6,7 +6,8 @@ export const OBJECTS = {
       nombre: 'Puerta Aula-Servidores',
       descripcion: 'Puerta metálica gris con teclado numérico.',
       // bloqueada ahora solo en state.puzzleStates
-      requiere_pass: { codigo: '192.168.1.0/24' }
+      requiere_pass: { codigo: '192.168.1.0/24' },
+      bloqueada: true
     },
   
     Puerta_Aula_Taller:{tipo:'Pasarela',nombre:'Puerta Aula-Taller',

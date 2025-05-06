@@ -62,7 +62,7 @@ export function showLocation() {
   print('\nSalidas:');
   for (const pas of Object.keys(room.salidas || {})) {
     const dest    = room.salidas[pas].destino;
-    const blocked = state.puzzleStates[`${pas}_bloqueada`];
+    const blocked = OBJECTS[pas].bloqueada;
     const stat    = blocked ? '[BLOQUEADA]' : '';
     print(
       `  - ${OBJECTS[pas].nombre} → ${ROOMS[dest].nombre} ${stat}`
@@ -394,7 +394,7 @@ export function cross(name) {
     return;
   }
 
-  if (state.puzzleStates[`${ref}_bloqueada`]) {
+  if (OBJECTS[ref].cerrado) {
     print(OBJECTS[ref].mensaje_bloqueo || 'Está bloqueada.');
     scrollToBottom();
     return;
