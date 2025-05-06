@@ -174,24 +174,26 @@ export function use(objName, targetName) {
   // ── modo “conversación” con un sistema ──────────────────────
   const sysRef = findRefByName(
     objName,
-    Object.fromEntries((room.objetos||[])
-      .map(r => [r, OBJECTS[r]]))
+    Object.fromEntries((room.objetos||[]).map(r => [r, OBJECTS[r]]))
   );
   if (!targetName && sysRef && OBJECTS[sysRef].sistema) {
-    const sys = OBJECTS[sysRef];
-    // buscamos el primer diálogo no superado
+    const sys    = OBJECTS[sysRef];
     const dialog = sys.dialogues.find(d =>
       d.superado === false || !state.puzzleStates[d.superado]
     );
 
+    // 1) Guardar contexto del NPC/sistema anterior
     saveCurrentNpcContext();
+
+    // 2) Cambiar a este “sistema” y cargar su contexto previo
     state.currentNpcRef       = sysRef;
     state.currentAiName       = sys.nombre;
     state.currentSystemPrompt = dialog.system_prompt;
-    state.conversationHistory = [];
+    loadNpcContext(sysRef);
 
-    print(`\n--- Conectado a ${sys.nombre} ---`,'game-message');
-    print(`${sys.nombre}: ${dialog.saludo}`,'ai-response');
+    // 3) Mostrar saludo y añadirlo al history
+    print(`\n--- Conectado a ${sys.nombre} ---`, 'game-message');
+    print(`${sys.nombre}: ${dialog.saludo}`, 'ai-response');
     state.conversationHistory.push({ role:'assistant', content:dialog.saludo });
 
     updatePrompt();
