@@ -171,20 +171,32 @@ export function take(name) {
 export function use(objName, targetName) {
   const room = getRoom();
 
-  // ── conversación con sistemas (/use sobre un objeto.sistema) ───────
+  // ── modo “conversación” con un sistema ──────────────────────
   const sysRef = findRefByName(
     objName,
-    Object.fromEntries((room.objetos||[]).map(r => [r, OBJECTS[r]]))
+    Object.fromEntries((room.objetos||[])
+      .map(r => [r, OBJECTS[r]]))
   );
   if (!targetName && sysRef && OBJECTS[sysRef].sistema) {
+    const sys = OBJECTS[sysRef];
+    // buscamos el primer diálogo no superado
+    const dialog = sys.dialogues.find(d =>
+      d.superado === false || !state.puzzleStates[d.superado]
+    );
+
     saveCurrentNpcContext();
     state.currentNpcRef       = sysRef;
-    state.currentAiName       = OBJECTS[sysRef].nombre;
-    state.currentSystemPrompt = OBJECTS[sysRef].system_prompt;
+    state.currentAiName       = sys.nombre;
+    state.currentSystemPrompt = dialog.system_prompt;
     state.conversationHistory = [];
-    print(`\n--- Entras en modo configuración de ${state.currentAiName} ---`, 'game-message');
+
+    print(`\n--- Conectado a ${sys.nombre} ---`,'game-message');
+    print(`${sys.nombre}: ${dialog.saludo}`,'ai-response');
+    state.conversationHistory.push({ role:'assistant', content:dialog.saludo });
+
     updatePrompt();
     scrollToBottom();
+    if (window.depuracion) updateDebug();
     return;
   }
 
@@ -503,7 +515,7 @@ export async function process(raw) {
     const llmAnswer = await askLLM(raw.trim());
     if (window.depuracion) updateDebug();
   
-    // procesar hitos genéricos
+    // procesar hitos genéricos en NPCS o SYSTEMS (objeto con propiedad sistema, dialogues, milestones)
     const def = NPCS[state.currentNpcRef] || OBJECTS[state.currentNpcRef];
     if (def?.milestones) {
       for (const [hito, psKey] of Object.entries(def.milestones)) {

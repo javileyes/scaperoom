@@ -49,24 +49,47 @@ export const OBJECTS = {
     Armario_Rack:{tipo:'Decoracion',nombre:'Armario Rack',
       descripcion:'Contiene switches, routers y patch-panels.'},
   
-    Switch_Cisco: {
-      tipo:        'Dispositivo',
-      nombre:      'Switch Cisco',
-      descripcion: 'Switch Cisco con CLI IOS para configurar VLANs.',
-      sistema:     true,   // ← nuevo flag
-      system_prompt: `Eres un Switch Cisco IOS. 
-  Compórtate estrictamente como un switch Cisco IOS, empezando 
-  desde el terminal en modo no privilegiado. "Help" o "?" son 
-  los comandos de ayuda. Sólo muestra comandos de navegación 
-  (enable, exit, configure) y de VLAN/interfaces. 
-  OJO: no puedes ayudar al usuario a resolver el puzzle, comportáte como un switch real.
-  IMPORTANTE: Al configurar VLAN 10 para "alumnos" en puertos 1–20 
-  y VLAN 20 para "profesores" en puertos 21–24, 
-  debes emitir "/hito configuración_switch superado".`,
-      milestones: {
-        '/hito configuración_switch superado': 'configuracion_switch'
+  /* … */
+  Switch_Cisco: {
+    tipo:    'Dispositivo',
+    nombre:  'Switch Cisco',
+    descripcion:
+      'Switch Cisco con CLI IOS para configurar VLANs.',
+    sistema: true,
+
+    // ── definimos diálogos como en npc.js ──────────────────
+    dialogues: [
+      {
+        // mientras puzzleStates['configuracion_switch']==false, éste es el diálogo activo
+        superado: 'configuracion_switch',
+        system_prompt: `Eres un Switch Cisco IOS. 
+Compórtate estrictamente como un switch Cisco IOS configurado por defecto y sin contraseñas, empezando 
+desde el terminal en modo no privilegiado. 
+Sé minimalista, sin información adicional ni de compilación. 
+Solo ejecuta el comando que el usario te pida (ninguno más).
+IMPORTANTE: Al configurar VLAN 10 para "alumnos" en puertos 1–20 
+y VLAN 20 para "profesores" en puertos 21–24, 
+debes emitir "/hito configuración_switch superado". 
+Intenta simplificar el número de comandos, los más importantes para realizar la tarea encomendada. 
+(enable, exit, configure) y de VLAN/interfaces. `,
+        saludo: 'Consola IOS lista. help o ? para ayuda.'
+      },
+      {
+        // tras superar el hito aparece este diálogo
+        superado: false,
+        system_prompt: `Eres un Switch Cisco IOS, estás perfectamente configurado. 
+        Comportate extrictamente como un switch Cisco IOS configurado por defecto y sin contraseñas, empezando desde el terminal en modo no privilegiado.
+        tienes una VLAN 10 para "alumnos" en puertos 1–20  y VLAN 20 para "profesores" en puertos 21–24`,
+        saludo: 'NOTA: La configuración de VLAN está OK, mejor no tocar nada.'
       }
-    },
+    ],
+
+    // el map de hitos funciona idéntico al de NPCS
+    milestones: {
+      '/hito configuración_switch superado': 'configuracion_switch'
+    }
+  },
+  /* … resto de OBJECTS … */
   
   
     Patch_Panel:{tipo:'Decoracion',nombre:'Patch-Panel',
@@ -93,16 +116,33 @@ export const OBJECTS = {
       recogible:true,
       nombre:   'Manual Cisco IOS',
       descripcion:'Comandos IOS para configurar el switch.',
-      contenido_detalle:
-        '--- Comandos Cisco IOS básicos ---\n' +
-        'interface <INT>\n' +
-        '  switchport mode access\n' +
-        '  switchport access vlan <VLAN_ID>\n' +
-        'exit\n\n' +
-        'vlan <VLAN_ID>\n' +
-        '  name <VLAN_NAME>\n' +
-        'exit\n\n' +
-        '! Otras: show vlan brief | show interfaces status'
+      contenido_detalle:`Configuring VLANs
+
+Switch#show vlan - Display current VLANs
+Switch(config)#vlan 10 - Create a VLAN with the number 10
+Switch(config-vlan)#name sales - Give the VLAN a name “sales”
+Switch(config-if)#switchport mode access - Set a switch interface to access mode (es el estado por defecto de fábrica, por tanto no es necesario ejecutar este comando a no ser que estuviera en modo trunk y quisieramos cambiarlo a modo access. De fábrica todos los puertos son de tipo access y son de la vlan 1)
+Switch(config-if)#switchport mode trunk - Set a switch interface to trunk mode
+Switch(config-if)#switchport access vlan 10 - Assign an interface to VLAN 10
+Switch(config-if)#switchport trunk allowed vlan 10, 20 – selecciona vlan aceptadas(por defecto acepta todas)
+Switch(config)# interface range f0/0 -15 – Select a range of interfaces to config.
+Switch(config-if-range)# switchport access vlan 10 – set range of interface to vlan 10
+
+Switch#show interfaces switchport – Muestra todas las interfaces y si son de access o trunk y las vlan que pueden etiquetar
+
+Switch#show interfaces FastEthernet 0/1 status – Muestra el estado de un interfaz
+Switch#show interfaces FastEthernet 0/1 switchport – Muestra el estado más info
+Switch#show vlan brief – Muestra todas las vlans y los puertos asignados a cada vlan
+
+Switch#show vlan id 10 – Muestra la vlan 10 y los puertos asignados
+
+--- misceláneos ---
+Switch#show version – Muestra la versión del IOS
+Switch#show ip interface brief – Muestra todas las interfaces y su estado
+Switch#show mac address-table – Muestra la tabla de direcciones MAC
+Switch#show ip route – Muestra la tabla de rutas
+Switch#show running-config – Muestra la configuración actual
+Switch#show startup-config – Muestra la configuración de inicio`
     },
   
     Cable_Red_Suelto_En_Suelo:{tipo:'Item',recogible:true,nombre:'Cable de Red Suelto',
