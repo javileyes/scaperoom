@@ -7,7 +7,7 @@ import { ROOMS }                      from './data/rooms.js';
 
 const ACTIONS = [
   '/look','/go','/cross','/examine','/take',
-  '/use','/talk','/solve','/inventory','/help'
+  '/use','/talk','/inventory','/help'
 ];
 
 function populateActions(){
@@ -33,6 +33,38 @@ function populateTargets(){
       for(const ref of Object.keys(room.salidas||{})){
         opts.push({ref, label:OBJECTS[ref].nombre});
       }
+    }
+    else if(act==='/examine'){
+      // 1) pasarelas de la sala
+      for(const ref of Object.keys(room.salidas||{})){
+        opts.push({ref, label:OBJECTS[ref].nombre});
+      }
+      // 2) objetos visibles
+      (room.objetos || [])
+        .filter(r => !OBJECTS[r]?.oculto)
+        .forEach(ref => opts.push({ ref, label: OBJECTS[ref].nombre }));
+      // 3) NPCs
+      (room.npcs || []).forEach(ref => {
+        opts.push({ ref, label: NPCS[ref].nombre });
+      });
+      // 4) inventario
+      state.inventory.forEach(ref => {
+        opts.push({ ref, label: OBJECTS[ref].nombre });
+      });
+    }
+    else if(act==='/use'){
+      // 1) pasarelas de la sala
+      for(const ref of Object.keys(room.salidas || {})){
+        opts.push({ ref, label: OBJECTS[ref].nombre });
+      }
+      // 2) objetos visibles en sala
+      (room.objetos || [])
+        .filter(r => !OBJECTS[r]?.oculto)
+        .forEach(ref => opts.push({ ref, label: OBJECTS[ref].nombre }));
+      // 3) tu inventario
+      state.inventory.forEach(ref =>
+        opts.push({ ref, label: OBJECTS[ref].nombre })
+      );
     }
     else if(act==='/talk'){
       // sólo NPCs
@@ -74,7 +106,7 @@ function initSelectors(){
     // resetea input
     ui.inputFld.value = act;
     // si la acción lleva arg, añade espacio y activa target
-    if(['/go','/cross','/examine','/take','/use','/talk','/solve'].includes(act)){
+    if(['/go','/cross','/examine','/take','/use','/talk'].includes(act)){
       ui.inputFld.value += ' ';
       ui.targetSelect.disabled = false;
     } else {

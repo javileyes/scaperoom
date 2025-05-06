@@ -1,10 +1,13 @@
 /* Objetos — sin cambios salvo posibles recortes en descripción */
 export const OBJECTS = {
     /* Pasarelas -------------------------------------------------- */
-    Puerta_Aula_Servidores:{tipo:'Pasarela',nombre:'Puerta Aula-Servidores',
-      descripcion:'Puerta metálica gris con teclado numérico.',
-      bloqueada:true, requiere_codigo:'192.168.1.0/24',
-      mensaje_bloqueo:'La puerta está cerrada. Introduce Subred de Gestión.'},
+    Puerta_Aula_Servidores: {
+      tipo: 'Pasarela',
+      nombre: 'Puerta Aula-Servidores',
+      descripcion: 'Puerta metálica gris con teclado numérico.',
+      // bloqueada ahora solo en state.puzzleStates
+      requiere_pass: { codigo: '192.168.1.0/24' }
+    },
   
     Puerta_Aula_Taller:{tipo:'Pasarela',nombre:'Puerta Aula-Taller',
       descripcion:'Puerta de madera standard.',bloqueada:false},
@@ -25,7 +28,7 @@ export const OBJECTS = {
       nombre:'Mesa del Profesor',
       descripcion:'Mesa grande con papeles y una nota solitaria.',
       oculto:false,
-      contenidos:['Nota_Profesor']    //  aquí asignamos lo que contiene
+      contenidos:['Nota_Profesor']
     },
     Nota_Profesor:{
       tipo:'Item',
@@ -103,10 +106,12 @@ Intenta simplificar el número de comandos, los más importantes para realizar l
       estado:'offline_disconnected',
       usable_con:['Cable_Red_Suelto_En_Suelo','Cable_Red_Nuevo_Caja']},
   
-    Terminal_Admin:{tipo:'Dispositivo',nombre:'Terminal de Administración',
-      descripcion:'Vieja torre con monitor CRT: prompt "Usuario:" parpadea.',
-      estado:'login_required', requiere_login:['admin','password123'],
-      mensaje_login:'Introduce usuario/contraseña usando formato usuario/contraseña.'},
+    Terminal_Admin: {
+      tipo: 'Dispositivo',
+      nombre: 'Terminal de Administración',
+      descripcion: 'Vieja torre con monitor CRT: prompt "Usuario:" parpadea.',
+      requiere_pass: { usuario: 'admin', password: 'password123' }
+    },
   
     Manual_Ensamblaje:{tipo:'Item',recogible:false,nombre:'Manual de Ensamblaje',
       descripcion:'Cómo montar un PC paso a paso.'},

@@ -74,12 +74,17 @@ export function showLocation() {
 }
 
 
-/* --- examine ----------------------------------------------------------- */
+//-------- examinar ----------------------------------------------------------- */
 export function examine(name) {
   const room   = getRoom();
   const search = {};
 
-  // sumar objetos de sala, NPCs y inventario
+  // 1) incluir pasarelas de la sala en el pool de búsqueda
+  Object.keys(room.salidas || {}).forEach(ref => {
+    search[ref] = OBJECTS[ref];
+  });
+
+  // 2) sumar objetos de sala, NPCs y inventario
   (room.objetos || []).forEach(r => search[r] = OBJECTS[r]);
   (room.npcs   || []).forEach(r => search[r] = NPCS[r]);
   state.inventory.forEach(r => search[r] = OBJECTS[r]);
@@ -95,50 +100,48 @@ export function examine(name) {
   const prefix = data.rol ? 'Observas a' : 'Examinas';
   print(`${prefix} ${data.nombre}: ${data.descripcion}`);
 
-  // contenido_detalle genérico
+  // requisitos genéricos
+  if (data.requiere_pass) {
+    const campos = Object.keys(data.requiere_pass).join(', ');
+    print(`Requiere contraseña para: ${campos}.`);
+  }
+  if (Array.isArray(data.requiere_obj)) {
+    const lista = data.requiere_obj
+      .map(r => OBJECTS[r]?.nombre || r)
+      .join(', ');
+    print(`Requiere para abrir: ${lista}.`);
+  }
+
+  // resto de la lógica anterior (detalle, contenidos ocultos, bloqueo pasarela…)
   if (data.contenido_detalle) {
     print('\n--- Detalle ---');
     print(data.contenido_detalle);
     print('----------------');
   }
-
-  // descubrir contenidos ocultos
   if (Array.isArray(data.contenidos)) {
     data.contenidos.forEach(oRef => {
       if (OBJECTS[oRef].oculto) {
         OBJECTS[oRef].oculto = false;
-        if (!room.objetos.includes(oRef)) {
-          room.objetos.push(oRef);
-        }
-        print(
-          `Al examinar ${data.nombre}, encuentras: ` +
-          `${OBJECTS[oRef].nombre}.`
-        );
+        if (!room.objetos.includes(oRef)) room.objetos.push(oRef);
+        print(`Al examinar ${data.nombre}, encuentras: ${OBJECTS[oRef].nombre}.`);
       }
     });
   }
-
-  // mensaje si pasarela bloqueada
-  if (data.tipo === 'Pasarela' &&
-      state.puzzleStates[`${ref}_bloqueada`]) {
+  if (data.tipo === 'Pasarela' && state.puzzleStates[`${ref}_bloqueada`]) {
     print(data.mensaje_bloqueo || 'Parece bloqueada.');
   }
-
-  // estado de dispositivos
   if (data.tipo === 'Dispositivo') {
     const key = `${ref}_estado`;
     if (state.puzzleStates[key]) {
       print(`Estado actual: ${state.puzzleStates[key]}`);
-    }
-    if (state.puzzleStates[key] === 'login_required' &&
-        data.mensaje_login) {
-      print(data.mensaje_login);
+      if (state.puzzleStates[key]==='login_required' && data.mensaje_login) {
+        print(data.mensaje_login);
+      }
     }
   }
 
   scrollToBottom();
 }
-
 
 /* --- take -------------------------------------------------------------- */
 export function take(name) {
@@ -170,6 +173,68 @@ export function take(name) {
 /* --- use (cables, nota, dispositivos IOS) ----------------------------- */
 export function use(objName, targetName) {
   const room = getRoom();
+  const ref  = findRefByName(objName, OBJECTS);
+  const obj  = OBJECTS[ref];
+
+  // ── if “use X on Y” y Y.requiere_obj ───────────────────────────
+  if (targetName) {
+    const tRef = findRefByName(targetName, OBJECTS);
+    if (tRef) {
+      const tObj = OBJECTS[tRef];
+      if (Array.isArray(tObj.requiere_obj)) {
+        const faltan = tObj.requiere_obj.filter(r => !state.inventory.includes(r));
+        if (faltan.length) {
+          print(
+            `Para abrir ${tObj.nombre} faltan: ` +
+            `${faltan.map(r => OBJECTS[r].nombre).join(', ')}.`
+          );
+        } else {
+          if (tObj.tipo === 'Pasarela') {
+            state.puzzleStates[`${tRef}_bloqueada`] = false;
+          } else {
+            tObj.oculto = false;
+          }
+          print(`${tObj.nombre} ahora accesible.`);
+        }
+        scrollToBottom();
+        return;
+      }
+    }
+  }
+
+  // 1) Caso requiere_obj (en el caso de que no haya targetName)
+  
+  if (!targetName && obj?.requiere_obj) {
+    const faltan = obj.requiere_obj.filter(r=>!state.inventory.includes(r));
+    if (faltan.length) {
+      print(
+        `Faltan: ${faltan.map(r=>OBJECTS[r].nombre).join(', ')}.`
+      );
+    } else {
+      // abrir
+      if (obj.tipo==='Pasarela')
+        state.puzzleStates[`${ref}_bloqueada`] = false;
+      else
+        obj.oculto = false;
+      print(`${obj.nombre} ahora accesible.`);
+    }
+    return;
+  }
+
+  // 2) Caso requiere_pass
+  if (!targetName && obj?.requiere_pass) {
+    const keys = Object.keys(obj.requiere_pass);
+    state.pending = {
+      ref, type:'pass',
+      keys, idx:0,
+      creds: obj.requiere_pass,
+      inputs:{}
+    };
+    print(`Introduce ${keys[0]}:`); scrollToBottom();
+    return;
+  }
+
+ 
 
   // ── modo “conversación” con un sistema ──────────────────────
   const sysRef = findRefByName(
@@ -301,46 +366,6 @@ export async function talk(name) {
 }
 
 
-/* --- solve (códigos / logins) ------------------------------------------ */
-export function solve(str) {
-  print(`Intentando resolver con '${str}'`);
-  let ok = false;
-
-  // abrir puertas
-  const room = getRoom();
-  for (const p of Object.keys(room.salidas || {})) {
-    if (
-      state.puzzleStates[`${p}_bloqueada`] &&
-      OBJECTS[p].requiere_codigo === str
-    ) {
-      state.puzzleStates[`${p}_bloqueada`] = false;
-      print(`¡Clic! ${OBJECTS[p].nombre} desbloqueada.`);
-      ok = true;
-    }
-  }
-
-  // terminal admin
-  if (
-    !ok &&
-    state.currentLocation === 'Cuarto_Servidores' &&
-    state.puzzleStates['Terminal_Admin_estado'] === 'login_required'
-  ) {
-    const [u, p]         = str.split('/', 2);
-    const [cu, cp]       = OBJECTS['Terminal_Admin'].requiere_login;
-    if (u?.trim() === cu && p?.trim() === cp) {
-      state.puzzleStates['Terminal_Admin_estado'] = 'logged_in';
-      print('¡Acceso concedido! Prompt C:\\>');
-      ok = true;
-    } else {
-      print('Usuario / contraseña incorrectos.');
-      ok = true;
-    }
-  }
-
-  if (!ok) print('No parece resolver nada.');
-  scrollToBottom();
-}
-
 
 /* --- movement ----------------------------------------------------------- */
 function canLeaveAula() {
@@ -424,30 +449,42 @@ export function moveTo(destRef, via = '') {
 export async function process(raw) {
   const cmd = raw.trim();
   if (!cmd) return;
-  print('> ' + cmd, 'player-input');
 
-  // modo configuración Switch Cisco
-  // if (
-  //   !cmd.startsWith('/') &&
-  //   state.currentNpcRef === 'Switch_Cisco'
-  // ) {
-  //   const llmAnswer = await askLLM(cmd);
-  //   if (
-  //     !state.puzzleStates['configuracion_switch'] &&
-  //     llmAnswer.includes('/hito configuración_switch superado')
-  //   ) {
-  //     state.puzzleStates['configuracion_switch'] = true;
-  //     print('Switch Cisco: Configuración aceptada.', 'ai-response');
-  //     scrollToBottom();
-  //   }
-  //   return;
-  // }
+  // ── si estamos pidiendo contraseña ──────────────────────────────
+  if (state.pending?.type==='pass') {
+    const p = state.pending;
+    const key = p.keys[p.idx];
+    if (raw === p.creds[key]) {
+      p.inputs[key] = raw;
+      p.idx++;
+      if (p.idx < p.keys.length) {
+        const next = p.keys[p.idx];
+        print(`Introduce ${next}:`);
+      } else {
+        // todo ok → abrir
+        const obj = OBJECTS[p.ref];
+        if (obj.tipo==='Pasarela')
+          state.puzzleStates[`${p.ref}_bloqueada`] = false;
+        else
+          obj.oculto = false;
+        print(`Acceso concedido a ${obj.nombre}.`);
+        state.pending = null;
+      }
+    } else {
+      print('Acceso denegado.');
+      state.pending = null;
+    }
+    scrollToBottom();
+    return;
+  }
 
 
   // comandos con '/'
   // ── 1) SLASH commands ─────────────────────────────────────────
-  if (cmd.startsWith('/')) {  
-    if (cmd.startsWith('/look ')) {
+  if (cmd.startsWith('/')) {
+
+    // atender '/look' sin parámetros o con extra
+    if (cmd === '/look' || cmd.startsWith('/look ')) {
       showLocation();
       return;
     }
@@ -462,7 +499,6 @@ export async function process(raw) {
   /take <obj>    – coger objeto
   /use <obj> [on <dest>] – usar
   /talk <npc>    – hablar con alguien
-  /solve <texto> – resolver puzzle
   /inventory     – inventario`,
         'game-message'
       );
@@ -497,10 +533,7 @@ export async function process(raw) {
       talk(cmd.slice(6));
       return;
     }
-    if (cmd.startsWith('/solve ')) {
-      solve(cmd.slice(7));
-      return;
-    }
+
     if (cmd.startsWith('/go ')) {
       go(cmd.slice(4));
       return;
@@ -539,10 +572,8 @@ export async function process(raw) {
     // }
    
 
-  // ── 3) SIN COMANDO NI NPC ──────────────────────────────────────
-  print(
-    'Para hablar, usa /talk [persona] para iniciar conversación.',
-    'game-message'
-  );
+  // ── 3) sin comando ni NPC ─────────────────────────────────────────
+  print('Usa /talk o /use para interactuar.');
   scrollToBottom();
+
 } 

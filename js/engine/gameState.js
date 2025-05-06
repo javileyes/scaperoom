@@ -12,7 +12,8 @@ export const state = {
   currentSystemPrompt : 'Eres un narrador y sistema de ayuda...',
   conversationHistory : [],
   isWaitingForAI  : false,
-  npcContexts     : {}           // Mapa refNpc → {history:[...]}
+  npcContexts     : {},           // Mapa refNpc → {history:[...]}
+  pending: null    // { ref, type:'pass', keys:[…], idx, creds:{…} } o null
 };
 
 /* ----- Inicialización de puzzles ---------------------------------------- */
