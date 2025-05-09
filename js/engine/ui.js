@@ -8,6 +8,9 @@ const label     = document.getElementById('input-label');
 const urlFld    = document.getElementById('llm-url');
 const actionSelect = document.getElementById('action-select');
 const targetSelect = document.getElementById('target-select');
+const onCheckbox      = document.getElementById('on-checkbox');
+const onCheckboxLabel = document.getElementById('on-checkbox-label');
+const target2Select   = document.getElementById('target2-select');
 
 // refs de depuración
 const debugToggle   = document.getElementById('debug-toggle');
@@ -76,5 +79,6 @@ initDebug();
 export const ui = {
   outputDiv, inputFld, label, urlFld,
   actionSelect, targetSelect,
+  onCheckbox, onCheckboxLabel, target2Select,
   updateDebug
 };

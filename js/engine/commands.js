@@ -104,6 +104,7 @@ export function examine(name) {
   if (data.requiere_pass) {
     const campos = Object.keys(data.requiere_pass).join(', ');
     print(`Requiere contraseña para: ${campos}.`);
+    print(`Ejecuta "/use ${data.nombre}" para introducirla.`);
   }
   if (Array.isArray(data.requiere_obj)) {
     const lista = data.requiere_obj

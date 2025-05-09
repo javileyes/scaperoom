@@ -97,32 +97,69 @@ function populateTargets(){
     ui.targetSelect.size = opts.length + 1;
   }
 
-function initSelectors(){
-  populateActions();
-  populateTargets();
-  ui.actionSelect.addEventListener('change',()=>{
-    populateTargets();
-    const act = ui.actionSelect.value;
-    // resetea input
-    ui.inputFld.value = act;
-    // si la acción lleva arg, añade espacio y activa target
-    if(['/go','/cross','/examine','/take','/use','/talk'].includes(act)){
-      ui.inputFld.value += ' ';
-      ui.targetSelect.disabled = false;
+  function populateTargets2(){
+    const room = getRoom();
+    const opts = [];
+    // sólo objetos visibles en sala + pasarelas
+    Object.keys(room.salidas||{}).forEach(r => opts.push({ref:r, label:OBJECTS[r].nombre}));
+    (room.objetos||[])
+      .filter(r=>!OBJECTS[r].oculto)
+      .forEach(r=>opts.push({ref:r, label:OBJECTS[r].nombre}));
+    ui.target2Select.innerHTML =
+      '<option value=""></option>' +
+      opts.map(o=>`<option value="${o.ref}">${o.label}</option>`).join('');
+    ui.target2Select.size = opts.length + 1;
+  }  
+
+  function initSelectors(){
+    // … existing populateActions/Targets …
+    ui.actionSelect.addEventListener('change',()=>{
+      populateTargets();
+      // Sólo en /use mostramos checkbox “on”
+      const isUse = ui.actionSelect.value === '/use';
+      ui.onCheckboxLabel.style.display = isUse ? 'inline-block' : 'none';
+      ui.onCheckbox.checked           = false;
+      ui.target2Select.style.display  = 'none';
+      updateInputFromSelects();
+      ui.inputFld.focus();
+    });
+    ui.targetSelect.addEventListener('change',()=>{
+      // cuando cambie origen, si estamos en /use, resetea tercer select
+      if(ui.actionSelect.value==='/use'){
+        ui.onCheckbox.checked = false;
+        ui.target2Select.style.display = 'none';
+        // y recargamos opciones objetivo
+        populateTargets2();
+      }
+      // actualiza input
+      updateInputFromSelects();
+      ui.inputFld.focus();
+    });
+    ui.onCheckbox.addEventListener('change',()=>{
+      ui.target2Select.style.display = ui.onCheckbox.checked ? 'block' : 'none';
+      updateInputFromSelects();
+      ui.inputFld.focus();
+    });
+    ui.target2Select.addEventListener('change',()=>{
+      updateInputFromSelects();
+      ui.inputFld.focus();   // ← foco al input
+    });  
+  }
+  
+  // Construye el comando en el input según selects
+  function updateInputFromSelects(){
+    const act  = ui.actionSelect.value.trim();
+    const t1   = ui.targetSelect.value;
+    if(!t1){ ui.inputFld.value = act; return; }
+    const name1 = OBJECTS[t1]?.nombre || NPCS[t1]?.nombre || t1;
+    if(act==='/use' && ui.onCheckbox.checked && ui.target2Select.value){
+      const t2 = ui.target2Select.value;
+      const name2 = OBJECTS[t2]?.nombre || t2;
+      ui.inputFld.value = `${act} ${name1} on ${name2}`;
     } else {
-      ui.targetSelect.disabled = true;
+      ui.inputFld.value = `${act} ${name1}`;
     }
-    ui.inputFld.focus();
-  });
-  ui.targetSelect.addEventListener('change',()=>{
-    const act = ui.actionSelect.value.trim();
-    const tgt = ui.targetSelect.value;
-    // actualiza input: acción + nombre legible
-    const name = OBJECTS[tgt]?.nombre || NPCS[tgt]?.nombre || tgt;
-    ui.inputFld.value = `${act} ${name}`;
-    ui.inputFld.focus();
-  });
-}
+  }
 
 function init(){
   print('--- ASIR Room-Escape Web (modular) ---');
@@ -132,6 +169,8 @@ function init(){
   resetGame();
   showLocation();
   updatePrompt();
+  populateActions();
+  populateTargets();
   initSelectors();                     // ── inicializa selects
   ui.inputFld.disabled = false;
   ui.inputFld.focus();
