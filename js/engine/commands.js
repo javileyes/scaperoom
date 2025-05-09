@@ -147,14 +147,21 @@ export function examine(name) {
 /* --- take -------------------------------------------------------------- */
 export function take(name) {
   const room = getRoom();
-  const ref  = findRefByName(name, OBJECTS);
+  // Buscar el objeto por nombre entre los objetos DEFINIDOS en la sala actual
+  const poolForTake = Object.fromEntries(
+    (room.objetos || []).map(objRef => [objRef, OBJECTS[objRef]])
+  );
+  const ref  = findRefByName(name, poolForTake);
 
-  if (!ref || !room.objetos?.includes(ref)) {
+  if (!ref) { 
     print(`No hay '${name}' aquí para coger.`);
+    scrollToBottom();
     return;
   }
+
   if (state.inventory.includes(ref)) {
     print('Ya lo tienes.');
+    scrollToBottom();
     return;
   }
 
@@ -165,8 +172,43 @@ export function take(name) {
     return;
   }
 
+  // Quitar de la lista de objetos de la sala
+  room.objetos = room.objetos.filter(itemRef => itemRef !== ref);
+  
+  // Añadir al inventario
   state.inventory.push(ref);
+
   print(`Recoges: ${obj.nombre}`);
+  scrollToBottom();
+}
+
+/* --- drop (soltar) ------------------------------------------------------- */
+export function drop(name) {
+  const room = getRoom();
+  // Buscar el objeto por nombre SÓLO en el inventario
+  const poolForDrop = Object.fromEntries(
+    state.inventory.map(objRef => [objRef, OBJECTS[objRef]])
+  );
+  const ref = findRefByName(name, poolForDrop);
+
+  if (!ref) { 
+    print(`No tienes '${name}' en tu inventario para soltar.`);
+    scrollToBottom();
+    return;
+  }
+
+  const obj = OBJECTS[ref];
+
+  // Quitar del inventario
+  state.inventory = state.inventory.filter(itemRef => itemRef !== ref);
+  
+  // Añadir a la lista de objetos de la sala actual
+  if (!room.objetos) {
+    room.objetos = []; 
+  }
+  room.objetos.push(ref);
+
+  print(`Sueltas: ${obj.nombre} en ${room.nombre}.`);
   scrollToBottom();
 }
 
@@ -517,6 +559,7 @@ export async function process(raw) {
   /cross <salida>– cruzar por pasarela concreta
   /examine <obj> – examinar algo
   /take <obj>    – coger objeto
+  /drop <obj>    – soltar objeto del inventario
   /use <obj> [on <dest>] – usar
   /talk <npc>    – hablar con alguien
   /inventory     – inventario`,
@@ -544,6 +587,10 @@ export async function process(raw) {
       take(cmd.slice(6));
       return;
     }
+    if (cmd.startsWith('/drop ')) { // Comando /soltar
+      drop(cmd.slice(6)); 
+      return;
+    }    
     if (cmd.startsWith('/use ')) {
       const [obj, dest] = cmd.slice(5).split(' on ');
       use(obj.trim(), dest?.trim());

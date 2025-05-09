@@ -6,7 +6,7 @@ import { NPCS }                        from './data/npcs.js';
 import { ROOMS }                      from './data/rooms.js';
 
 const ACTIONS = [
-  '/look','/go','/cross','/examine','/take',
+  '/look','/go','/cross','/examine','/take','/drop',
   '/use','/talk','/inventory','/help'
 ];
 
@@ -18,97 +18,106 @@ function populateActions(){
 }
 
 function populateTargets(){
-    const act  = ui.actionSelect.value;
-    const room = getRoom();
-    const opts = [];
-  
-    if(act==='/go'){
-      // sólo salas adyacentes
-      for(const salida of Object.values(room.salidas||{})){
-        opts.push({ref:salida.destino, label:ROOMS[salida.destino].nombre});
-      }
-    }
-    else if(act==='/cross'){
-      // sólo pasarelas (refs de salida)
-      for(const ref of Object.keys(room.salidas||{})){
-        opts.push({ref, label:OBJECTS[ref].nombre});
-      }
-    }
-    else if(act==='/examine'){
-      // 1) pasarelas de la sala
-      for(const ref of Object.keys(room.salidas||{})){
-        opts.push({ref, label:OBJECTS[ref].nombre});
-      }
-      // 2) objetos visibles
-      (room.objetos || [])
-        .filter(r => !OBJECTS[r]?.oculto)
-        .forEach(ref => opts.push({ ref, label: OBJECTS[ref].nombre }));
-      // 3) NPCs
-      (room.npcs || []).forEach(ref => {
-        opts.push({ ref, label: NPCS[ref].nombre });
-      });
-      // 4) inventario
-      state.inventory.forEach(ref => {
-        opts.push({ ref, label: OBJECTS[ref].nombre });
-      });
-    }
-    else if(act==='/use'){
-      // 1) pasarelas de la sala
-      for(const ref of Object.keys(room.salidas || {})){
-        opts.push({ ref, label: OBJECTS[ref].nombre });
-      }
-      // 2) objetos visibles en sala
-      (room.objetos || [])
-        .filter(r => !OBJECTS[r]?.oculto)
-        .forEach(ref => opts.push({ ref, label: OBJECTS[ref].nombre }));
-      // 3) tu inventario
-      state.inventory.forEach(ref =>
-        opts.push({ ref, label: OBJECTS[ref].nombre })
-      );
-    }
-    else if(act==='/talk'){
-      // sólo NPCs
-      (room.npcs||[]).forEach(ref=>{
-        opts.push({ref, label:NPCS[ref].nombre});
-      });
-    }
-    else {
-      // default: objetos visibles en sala, inventario y NPCs
-      (room.objetos||[])
-        .filter(ref => !OBJECTS[ref]?.oculto)         // <-- filtramos ocultos
-        .forEach(ref => opts.push({ref, label:OBJECTS[ref].nombre}));
+  const act  = ui.actionSelect.value;
+  const room = getRoom();
+  const opts = [];
 
-      state.inventory.forEach(ref => {
-        // si tuviera ocultos en inventario (no debería), los mostramos igualmente
-        opts.push({ref, label:OBJECTS[ref].nombre});
-      });
-
-      (room.npcs||[]).forEach(ref => 
-        opts.push({ref, label:NPCS[ref].nombre})
-      );
+  if(act==='/go'){
+    // sólo salas adyacentes
+    for(const salida of Object.values(room.salidas||{})){
+      opts.push({ref:salida.destino, label:ROOMS[salida.destino].nombre});
     }
-  
-    // cabecera en blanco + opciones
-    ui.targetSelect.innerHTML =
-      '<option value=""></option>' +
-      opts.map(o=>`<option value="${o.ref}">${o.label}</option>`).join('');
-    ui.targetSelect.value = '';
-    ui.targetSelect.disabled = opts.length===0;
-    ui.targetSelect.size = opts.length + 1;
   }
+  else if(act==='/cross'){
+    // sólo pasarelas (refs de salida)
+    for(const ref of Object.keys(room.salidas||{})){
+      opts.push({ref, label:OBJECTS[ref].nombre});
+    }
+  }
+  else if(act==='/examine'){
+    // 1) pasarelas de la sala
+    for(const ref of Object.keys(room.salidas||{})){
+      opts.push({ref, label:OBJECTS[ref].nombre});
+    }
+    // 2) objetos visibles EN LA SALA (ya no están en inventario si se cogieron)
+    (room.objetos || [])
+      .filter(r => !OBJECTS[r]?.oculto)
+      .forEach(ref => opts.push({ ref, label: OBJECTS[ref].nombre }));
+    // 3) NPCs
+    (room.npcs || []).forEach(ref => {
+      opts.push({ ref, label: NPCS[ref].nombre });
+    });
+    // 4) inventario (para examinar objetos del inventario)
+    state.inventory.forEach(ref => {
+      opts.push({ ref, label: OBJECTS[ref].nombre });
+    });
+  }
+  else if(act==='/use'){
+    // Para /use, el primer objeto puede ser del inventario o de la sala
+    // 1) pasarelas de la sala (si son usables directamente o tienen requisitos)
+    for(const ref of Object.keys(room.salidas || {})){
+      if (OBJECTS[ref].requiere_pass || OBJECTS[ref].requiere_obj || OBJECTS[ref].sistema) {
+          opts.push({ ref, label: OBJECTS[ref].nombre });
+      }
+    }
+    // 2) objetos visibles en sala
+    (room.objetos || [])
+      .filter(r => !OBJECTS[r]?.oculto)
+      .forEach(ref => opts.push({ ref, label: OBJECTS[ref].nombre }));
+    // 3) tu inventario
+    state.inventory.forEach(ref =>
+      opts.push({ ref, label: OBJECTS[ref].nombre })
+    );
+  }
+  else if(act==='/talk'){
+    // sólo NPCs
+    (room.npcs||[]).forEach(ref=>{
+      opts.push({ref, label:NPCS[ref].nombre});
+    });
+  }
+  else if(act==='/take'){ // Para /take, solo objetos de la sala que sean recogibles
+      (room.objetos || [])
+          .filter(r => !OBJECTS[r]?.oculto && OBJECTS[r]?.recogible) 
+          .forEach(ref => opts.push({ ref, label: OBJECTS[ref].nombre }));
+  }
+  else if(act==='/drop'){ // Para /drop (o /soltar), solo objetos del inventario
+      state.inventory.forEach(ref => {
+          opts.push({ ref, label: OBJECTS[ref].nombre });
+      });
+  }
+  // Para comandos como /look, /inventory, /help, opts permanecerá vacío y el select se deshabilitará.
 
-  function populateTargets2(){
+  // cabecera en blanco + opciones
+  ui.targetSelect.innerHTML =
+    '<option value=""></option>' +
+    opts.map(o=>`<option value="${o.ref}">${o.label}</option>`).join('');
+  ui.targetSelect.value = ''; // Resetear selección
+  ui.targetSelect.disabled = opts.length===0; // Deshabilitar si no hay opciones
+  ui.targetSelect.size = Math.max(2, Math.min(opts.length + 1, 10)); // Ajustar tamaño dinámicamente
+}
+
+  function populateTargets2(){ // Para el segundo objetivo de /use obj on target2
     const room = getRoom();
     const opts = [];
-    // sólo objetos visibles en sala + pasarelas
-    Object.keys(room.salidas||{}).forEach(r => opts.push({ref:r, label:OBJECTS[r].nombre}));
+    // Objetos visibles en sala (incluyendo pasarelas si son objetivos válidos para "on")
+    // Pasarelas como segundo objetivo de "use X on Y"
+    Object.keys(room.salidas||{}).forEach(r => {
+        // Añadir pasarelas si pueden ser objetivo de una acción "on"
+        // Por ejemplo, si tienen requiere_obj para ser abiertas con otro objeto
+        if (OBJECTS[r].requiere_obj || OBJECTS[r].requiere_pass) { // Ampliar según necesidad
+            opts.push({ref:r, label:OBJECTS[r].nombre});
+        }
+    });
+    // Objetos normales en la sala
     (room.objetos||[])
       .filter(r=>!OBJECTS[r].oculto)
       .forEach(r=>opts.push({ref:r, label:OBJECTS[r].nombre}));
+    
     ui.target2Select.innerHTML =
       '<option value=""></option>' +
       opts.map(o=>`<option value="${o.ref}">${o.label}</option>`).join('');
-    ui.target2Select.size = opts.length + 1;
+    ui.target2Select.value = ''; // Resetear selección
+    ui.target2Select.size = Math.max(2, Math.min(opts.length + 1, 10)); // Ajustar tamaño
   }  
 
   function initSelectors(){
