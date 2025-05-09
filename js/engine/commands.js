@@ -472,6 +472,8 @@ export async function process(raw) {
       }
     } else {
       print('Acceso denegado.');
+      print(`Vuelve a ejecutar "/use ${OBJECTS[p.ref].nombre}" para volver a intentarlo.`);
+      state.pending.inputs[key] = raw;
       state.pending = null;
     }
     scrollToBottom();
