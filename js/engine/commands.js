@@ -395,7 +395,7 @@ export function cross(name) {
     return;
   }
 
-  if (OBJECTS[ref].cerrado) {
+  if (OBJECTS[ref].bloqueada) {
     print(OBJECTS[ref].mensaje_bloqueo || 'Está bloqueada.');
     scrollToBottom();
     return;
@@ -415,8 +415,7 @@ export function go(destName) {
   for (const p in room.salidas) {
     if (
       room.salidas[p].destino === destRef &&
-      !state.puzzleStates[`${p}_bloqueada`]
-    ) {
+      !OBJECTS[p].bloqueada     ) {
       cross(p);
       return;
     }
@@ -465,7 +464,7 @@ export async function process(raw) {
         // todo ok → abrir
         const obj = OBJECTS[p.ref];
         if (obj.tipo==='Pasarela')
-          state.puzzleStates[`${p.ref}_bloqueada`] = false;
+          obj.bloqueada = false; 
         else
           obj.oculto = false;
         print(`Acceso concedido a ${obj.nombre}.`);

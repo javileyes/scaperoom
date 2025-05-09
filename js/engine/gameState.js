@@ -20,12 +20,15 @@ export const state = {
 export function initializePuzzleStates(){
   const s = {};
 
+  // Inicializamos estados de dispositivos
   for (const ref in OBJECTS){
     const obj = OBJECTS[ref];
-    if (obj.tipo==='Pasarela' && obj.bloqueada) s[`${ref}_bloqueada`] = true;
-    if (obj.tipo==='Dispositivo' && obj.estado) s[`${ref}_estado`] = obj.estado;
+    if (obj.tipo==='Dispositivo' && obj.estado) {
+      s[`${ref}_estado`] = obj.estado;
+    }
   }
 
+  // Puzzles
   s['raul_asked_sql'] = false;
   s['raul_gave_credentials'] = false;
   s['javier_passed'] = false;
