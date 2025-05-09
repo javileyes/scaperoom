@@ -268,38 +268,56 @@ export function use(objName, targetName) {
     return;
   }
 
-  // parámetros básicos
-  const objRef = findRefByName(
-    objName,
-    Object.fromEntries(state.inventory.map(r => [r, OBJECTS[r]]))
-  );
-  if (!objRef) {
-    print(`No tienes '${objName}'.`);
+  // Para los siguientes usos específicos (cables, notas, etc.),
+  // el objeto principal (objName, ya resuelto a 'ref' y 'obj') 
+  // debe estar en el inventario o ser un objeto visible en la sala.
+
+  if (!obj) { // 'obj' fue definido al inicio de la función como OBJECTS[ref]
+    print(`No existe tal cosa como '${objName}'.`);
     scrollToBottom();
     return;
   }
 
+  const isInInventory = state.inventory.includes(ref); // 'ref' es el ID de objName
+  const isInRoomAndVisible = room.objetos?.includes(ref) && !obj.oculto;
+
+  // Si no es un caso especial ya manejado (requiere_*, sistema)
+  // y el objeto no está en el inventario ni es un objeto visible en la sala,
+  // entonces no se puede usar de esta manera.
+  if (!isInInventory && !isInRoomAndVisible) {
+    // Si es una pasarela, ya debería haber sido manejada por requiere_pass/obj o no es usable así.
+    if (obj.tipo === 'Pasarela') {
+        print(`No puedes usar '${obj.nombre}' de esa manera.`);
+    } else {
+        print(`No puedes usar '${obj.nombre}' porque no está accesible (ni en tu inventario ni visible aquí).`);
+    }
+    scrollToBottom();
+    return;
+  }
+  
+  // targetRef (para "use X on Y")
   let targetRef = null;
   if (targetName) {
-    targetRef = findRefByName(
-      targetName,
-      Object.fromEntries((room.objetos || []).map(r => [r, OBJECTS[r]]))
-    );
+    // El objetivo (targetName) debe ser un objeto visible en la sala.
+    targetRef = findRefByName(targetName, Object.fromEntries(
+        (room.objetos || []).filter(r => !OBJECTS[r]?.oculto).map(r => [r, OBJECTS[r]])
+    ));
     if (!targetRef) {
-      print(`No ves '${targetName}' aquí.`);
+      print(`No ves '${targetName}' aquí para usar algo sobre él.`);
+      scrollToBottom();
       return;
     }
   }
 
+  // Mensaje de intento
   print(
-    `Intentando usar ${OBJECTS[objRef].nombre}` +
+    `Intentando usar ${obj.nombre}` +
     (targetRef ? ` sobre ${OBJECTS[targetRef].nombre}` : '')
   );
 
   // conexiones de cables a servidor
   if (
-    ['Cable_Red_Suelto_En_Suelo', 'Cable_Red_Nuevo_Caja']
-      .includes(objRef) &&
+    (ref === 'Cable_Red_Suelto_En_Suelo' || ref === 'Cable_Red_Nuevo_Caja') &&
     targetRef === 'SRV_DC01'
   ) {
     const key = 'SRV_DC01_estado';
@@ -316,10 +334,10 @@ export function use(objName, targetName) {
   }
 
   // leer nota
-  if (objRef === 'Nota_Profesor' && !targetRef) {
+  if (ref === 'Nota_Profesor' && !targetRef) {
     print(
       '\n--- Contenido de la nota ---\n' +
-      OBJECTS[objRef].contenido_detalle +
+      obj.contenido_detalle +
       '\n---------------------------'
     );
     scrollToBottom();
@@ -327,8 +345,8 @@ export function use(objName, targetName) {
   }
 
   // manual Cisco
-  if (objRef === 'Manual_Cisco' && !targetRef) {
-    print('\n' + OBJECTS[objRef].contenido_detalle);
+  if (ref === 'Manual_Cisco' && !targetRef) {
+    print('\n' + obj.contenido_detalle);
     scrollToBottom();
     return;
   }
