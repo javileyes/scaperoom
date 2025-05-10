@@ -105,7 +105,7 @@ Intenta simplificar el número de comandos, los más importantes para realizar l
     SRV_DC01:{tipo:'Dispositivo',nombre:'Servidor SRV-DC01',
       descripcion:'Servidor HP ProLiant 2U con luz roja parpadeando.',
       estado:'offline_disconnected',
-      usable_con:['Cable_Red_Suelto_En_Suelo','Cable_Red_Nuevo_Caja'],
+      usable_con:['Cable_Red_Nuevo_Caja'],
           descripciones_estado: { // Descripciones basadas en el estado
         'offline_disconnected': 'Servidor HP ProLiant 2U con luz roja parpadeando.',
         'offline_connected': 'Servidor HP ProLiant 2U con luz verde.'},
@@ -155,9 +155,6 @@ Switch#show running-config – Muestra la configuración actual
 Switch#show startup-config – Muestra la configuración de inicio`
     },
   
-    Cable_Red_Suelto_En_Suelo:{tipo:'Item',recogible:true,nombre:'Cable de Red Suelto',
-      descripcion:'UTP Cat6 azul, 2 m.', one_use: true },
-  
     Cable_Red_Nuevo_Caja:{tipo:'Item',recogible:true,nombre:'Cable de Red Nuevo',
-      descripcion:'UTP Cat5e amarillo, aún enrollado.'}
+      descripcion:'UTP Cat5e amarillo, aún enrollado, parece un latiguillo prefabricado.'}
   };

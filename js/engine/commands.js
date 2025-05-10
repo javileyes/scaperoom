@@ -435,7 +435,7 @@ export function use(objName, targetName) {
 
   // conexiones de cables a servidor
   if (
-    (ref === 'Cable_Red_Suelto_En_Suelo' || ref === 'Cable_Red_Nuevo_Caja') &&
+    (ref === 'Cable_Red_Nuevo_Caja') &&
     targetObj && targetObj === OBJECTS['SRV_DC01'] // Comparar con la referencia directa al objeto servidor
   ) {
     const key = 'SRV_DC01_estado';
