@@ -98,7 +98,18 @@ export function examine(name) {
 
   const data   = search[ref];
   const prefix = data.rol ? 'Observas a' : 'Examinas';
-  print(`${prefix} ${data.nombre}: ${data.descripcion}`);
+  let currentDescription = data.descripcion; // Descripción por defecto
+
+  // Comprobar si hay descripciones basadas en estado para este objeto
+  if (data.tipo === 'Dispositivo' && data.descripciones_estado) {
+    const stateKey = `${ref}_estado`; // Construye la clave del estado, ej: "SRV_DC01_estado"
+    const currentState = state.puzzleStates[stateKey];
+    if (currentState && data.descripciones_estado[currentState]) {
+      currentDescription = data.descripciones_estado[currentState];
+    }
+  }
+
+  print(`${prefix} ${data.nombre}: ${currentDescription}`); // Usar la descripción determinada
 
   // requisitos genéricos
   if (data.requiere_pass) {
@@ -213,17 +224,35 @@ export function drop(name) {
 }
 
 
+function consumeObject(objectRefToRemove) {
+  const objToConsume = OBJECTS[objectRefToRemove];
+  if (!objToConsume) return;
+
+  const room = getRoom();
+
+  // Eliminar del inventario del jugador
+  const initialInventoryLength = state.inventory.length;
+  state.inventory = state.inventory.filter(itemRef => itemRef !== objectRefToRemove);
+  
+  // Eliminar de la lista de objetos de la sala actual (si no estaba en el inventario)
+  if (room.objetos && initialInventoryLength === state.inventory.length) { // Solo si no se quitó del inventario
+    room.objetos = room.objetos.filter(itemRef => itemRef !== objectRefToRemove);
+  }
+  
+  print(`${objToConsume.nombre} ha desaparecido después de su uso.`, 'game-message');
+}
+
 /* --- use (cables, nota, dispositivos IOS) ----------------------------- */
 export function use(objName, targetName) {
   const room = getRoom();
-  const ref  = findRefByName(objName, OBJECTS);
-  const obj  = OBJECTS[ref];
+  const ref  = findRefByName(objName, OBJECTS); // ref del objeto origen (X)
+  const obj  = OBJECTS[ref]; // El objeto origen (X)
 
   // ── if “use X on Y” y Y.requiere_obj ───────────────────────────
   if (targetName) {
-    const tRef = findRefByName(targetName, OBJECTS);
+    const tRef = findRefByName(targetName, OBJECTS); // tRef es el ID del objeto destino (Y)
     if (tRef) {
-      const tObj = OBJECTS[tRef];
+      const tObj = OBJECTS[tRef]; // tObj es el objeto destino (Y)
       if (Array.isArray(tObj.requiere_obj)) {
         const faltan = tObj.requiere_obj.filter(r => !state.inventory.includes(r));
         if (faltan.length) {
@@ -231,13 +260,33 @@ export function use(objName, targetName) {
             `Para abrir ${tObj.nombre} faltan: ` +
             `${faltan.map(r => OBJECTS[r].nombre).join(', ')}.`
           );
-        } else {
+        } else { // Todos los objetos requeridos por tObj están en el inventario
+          let success = false;
           if (tObj.tipo === 'Pasarela') {
-            state.puzzleStates[`${tRef}_bloqueada`] = false;
+            if (tObj.bloqueada) {
+                tObj.bloqueada = false;
+                success = true;
+            }
           } else {
-            tObj.oculto = false;
+            if (tObj.oculto) {
+                tObj.oculto = false;
+                success = true;
+            }
           }
-          print(`${tObj.nombre} ahora accesible.`);
+
+          if (success) {
+            print(`${tObj.nombre} ahora accesible.`);
+            // Consumir TODOS los objetos one_use que eran parte del requisito
+            tObj.requiere_obj.forEach(requiredRef => {
+              const requiredObj = OBJECTS[requiredRef];
+              // Se comprueba si el objeto requerido estaba en el inventario (condición para ser "usado")
+              if (requiredObj.one_use && state.inventory.includes(requiredRef)) { 
+                consumeObject(requiredRef);
+              }
+            });
+          } else {
+            print(`${tObj.nombre} ya estaba accesible o no cambió de estado.`);
+          }
         }
         scrollToBottom();
         return;
@@ -245,22 +294,40 @@ export function use(objName, targetName) {
     }
   }
 
-  // 1) Caso requiere_obj (en el caso de que no haya targetName)
-  
+  // 1) Caso requiere_obj (en el caso de que no haya targetName, usar X en sí mismo si X requiere_obj)
   if (!targetName && obj?.requiere_obj) {
     const faltan = obj.requiere_obj.filter(r=>!state.inventory.includes(r));
     if (faltan.length) {
       print(
-        `Faltan: ${faltan.map(r=>OBJECTS[r].nombre).join(', ')}.`
+        `Para usar ${obj.nombre}, faltan: ${faltan.map(r=>OBJECTS[r].nombre).join(', ')}.`
       );
     } else {
-      // abrir
-      if (obj.tipo==='Pasarela')
-        state.puzzleStates[`${ref}_bloqueada`] = false;
-      else
-        obj.oculto = false;
-      print(`${obj.nombre} ahora accesible.`);
+      let success = false;
+      if (obj.tipo==='Pasarela') {
+        if (obj.bloqueada) {
+            obj.bloqueada = false;
+            success = true;
+        }
+      } else {
+        if (obj.oculto) {
+            obj.oculto = false;
+            success = true;
+        }
+      }
+      if (success) {
+        print(`${obj.nombre} ahora accesible.`);
+        // Consumir TODOS los objetos one_use que eran parte del requisito
+        obj.requiere_obj.forEach(requiredRef => {
+            const requiredObj = OBJECTS[requiredRef];
+            if (requiredObj.one_use && state.inventory.includes(requiredRef)) {
+                consumeObject(requiredRef);
+            }
+        });
+      } else {
+         print(`${obj.nombre} ya estaba accesible o no cambió de estado.`);
+      }
     }
+    scrollToBottom();
     return;
   }
 
@@ -338,38 +405,53 @@ export function use(objName, targetName) {
   }
   
   // targetRef (para "use X on Y")
-  let targetRef = null;
+  let targetObj = null; // Para el objeto destino
   if (targetName) {
-    // El objetivo (targetName) debe ser un objeto visible en la sala.
-    targetRef = findRefByName(targetName, Object.fromEntries(
-        (room.objetos || []).filter(r => !OBJECTS[r]?.oculto).map(r => [r, OBJECTS[r]])
-    ));
-    if (!targetRef) {
-      print(`No ves '${targetName}' aquí para usar algo sobre él.`);
-      scrollToBottom();
-      return;
+    const tRef = findRefByName(targetName, OBJECTS);
+    if (!tRef || !room.objetos?.includes(tRef) && !OBJECTS[tRef].tipo === 'Pasarela' /* Permitir pasarelas como target */) {
+        // El objetivo (targetName) debe ser un objeto visible en la sala o una pasarela.
+        const targetPool = Object.fromEntries(
+            (room.objetos || []).filter(r => !OBJECTS[r]?.oculto).map(r => [r, OBJECTS[r]])
+        );
+        Object.keys(room.salidas || {}).forEach(r => targetPool[r] = OBJECTS[r]); // Añadir pasarelas al pool de búsqueda para target
+
+        const foundTargetRef = findRefByName(targetName, targetPool);
+        if (!foundTargetRef) {
+            print(`No ves '${targetName}' aquí para usar algo sobre él.`);
+            scrollToBottom();
+            return;
+        }
+        targetObj = OBJECTS[foundTargetRef];
+    } else {
+        targetObj = OBJECTS[tRef];
     }
   }
 
   // Mensaje de intento
   print(
     `Intentando usar ${obj.nombre}` +
-    (targetRef ? ` sobre ${OBJECTS[targetRef].nombre}` : '')
+    (targetObj ? ` sobre ${targetObj.nombre}` : '')
   );
 
   // conexiones de cables a servidor
   if (
     (ref === 'Cable_Red_Suelto_En_Suelo' || ref === 'Cable_Red_Nuevo_Caja') &&
-    targetRef === 'SRV_DC01'
+    targetObj && targetObj === OBJECTS['SRV_DC01'] // Comparar con la referencia directa al objeto servidor
   ) {
     const key = 'SRV_DC01_estado';
+    let success = false;
     if (state.puzzleStates[key] === 'offline_disconnected') {
       state.puzzleStates[key] = 'offline_connected';
       print('Conectas el cable. La luz de red se vuelve verde.');
+      success = true;
     } else if (state.puzzleStates[key] === 'offline_connected') {
       print('El servidor ya tiene cable.');
     } else {
       print('No tiene efecto.');
+    }
+
+    if (success && obj.one_use) { // obj es el cable (OBJECTS[ref])
+        consumeObject(ref);
     }
     scrollToBottom();
     return;
