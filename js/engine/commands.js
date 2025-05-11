@@ -508,10 +508,7 @@ export async function talk(name) {
 
 
 /* --- movement ----------------------------------------------------------- */
-function canLeaveAula() {
-  return state.puzzleStates['javier_passed'];
-}
-
+// ── cruzar por pasarela concreta ────────────────────────────────────────
 export function cross(name) {
   const room = getRoom();
   const ref  = findRefByName(
@@ -525,17 +522,17 @@ export function cross(name) {
     return;
   }
 
-  if (
-    state.currentLocation === 'Aula_Teoria' &&
-    !canLeaveAula()
-  ) {
-    print('Javier se interpone: «Necesitas acertar 3 preguntas antes de salir».');
+
+  // Verificar si está bloqueada (existente)
+  if (OBJECTS[ref].bloqueada) {
+    print(OBJECTS[ref].mensaje_bloqueo || 'Está bloqueada.');
     scrollToBottom();
     return;
   }
 
-  if (OBJECTS[ref].bloqueada) {
-    print(OBJECTS[ref].mensaje_bloqueo || 'Está bloqueada.');
+  // Verificar hito requerido (nuevo)
+  if (pasarela.hito_requerido && !state.puzzleStates[pasarela.hito_requerido]) {
+    print(pasarela.mensaje_hito_requerido || `No puedes pasar por aquí todavía.`);
     scrollToBottom();
     return;
   }
@@ -550,13 +547,13 @@ export function go(destName) {
     print('Lugar desconocido.');
     return;
   }
+  
   const room = getRoom();
   for (const p in room.salidas) {
-    if (
-      room.salidas[p].destino === destRef &&
-      !OBJECTS[p].bloqueada     ) {
+    const pasarela = OBJECTS[p];
+    if (room.salidas[p].destino === destRef) {
       cross(p);
-      return;
+      return;      
     }
   }
   print('No hay un camino abierto hasta allí.');

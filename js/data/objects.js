@@ -7,11 +7,17 @@ export const OBJECTS = {
       descripcion: 'Puerta metálica gris con teclado numérico.',
       // bloqueada ahora solo en state.puzzleStates
       requiere_pass: { codigo: '192.168.1.0/24' },
-      bloqueada: true
+      bloqueada: true,
+      hito_requerido: 'javier_passed',
+      mensaje_hito_requerido: 'Javier se interpone: «Necesitas acertar 3 preguntas antes de salir».'
+    
     },
   
     Puerta_Aula_Taller:{tipo:'Pasarela',nombre:'Puerta Aula-Taller',
-      descripcion:'Puerta de madera standard.',bloqueada:false},
+      descripcion:'Puerta de madera standard.',bloqueada:false,
+      hito_requerido: 'javier_passed',
+      mensaje_hito_requerido: 'Javier se interpone: «Necesitas acertar 3 preguntas antes de salir».'
+    },
   
     Conexion_Taller_Redes:{tipo:'Pasarela',nombre:'Conexión Taller-Redes',
       descripcion:'Hueco improvisado que conecta con la sala de al lado.',
