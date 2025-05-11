@@ -28,7 +28,7 @@ export function initializePuzzleStates(){
     }
   }
 
-  // Puzzles
+  // Puzzles (hitos)
   s['raul_asked_sql'] = false;
   s['raul_gave_credentials'] = false;
   s['javier_passed'] = true;

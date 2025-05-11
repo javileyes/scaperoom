@@ -56,7 +56,7 @@ function populateTargets(){
     // Para /use, el primer objeto puede ser del inventario o de la sala
     // 1) pasarelas de la sala (si son usables directamente o tienen requisitos)
     for(const ref of Object.keys(room.salidas || {})){
-      if (OBJECTS[ref].requiere_pass || OBJECTS[ref].requiere_obj || OBJECTS[ref].sistema) {
+      if (OBJECTS[ref].requiere_pass || OBJECTS[ref].sistema) {
           opts.push({ ref, label: OBJECTS[ref].nombre });
       }
     }
@@ -103,7 +103,7 @@ function populateTargets2(){ // Para el segundo objetivo de /use obj on target2
   // 1. Pasarelas como segundo objetivo de "use X on Y"
   Object.keys(room.salidas||{}).forEach(r => {
       // Añadir pasarelas si pueden ser objetivo de una acción "on"
-      if (OBJECTS[r].requiere_obj || OBJECTS[r].requiere_pass) {
+      if (OBJECTS[r].requiere_pass) {
           opts.push({ref:r, label:OBJECTS[r].nombre});
       }
   });

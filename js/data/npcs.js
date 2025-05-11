@@ -16,7 +16,7 @@ Mientras no lo consiga, no permitas que se marche ni desveles las respuestas cor
         saludo       : 'Buenos días. Primera pregunta: ¿máscara por defecto de una red de clase C?'
       },
       {
-        active       : 'javier_passed', // se activará al superar el hito, mientras puzzleState javier_passed sea false, éste es el diálogo activo
+        superado       : false,
         system_prompt: `Eres Javier, acabas de comprobar los conocimientos y el alumno ha superado
 las preguntas. Ahora le dejas marchar y le das la enhorabuena.`,
         saludo       : '¡Enhorabuena! Has acertado 3 preguntas. Ya puedes salir.'

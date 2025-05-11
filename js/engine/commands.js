@@ -127,12 +127,6 @@ export function examine(name) {
     print(`Requiere contraseña para: ${campos}.`);
     print(`Ejecuta "/use ${data.nombre}" para introducirla.`);
   }
-  if (Array.isArray(data.requiere_obj)) {
-    const lista = data.requiere_obj
-      .map(r => OBJECTS[r]?.nombre || r)
-      .join(', ');
-    print(`Requiere para abrir: ${lista}.`);
-  }
 
   // resto de la lógica anterior (detalle, contenidos ocultos, bloqueo pasarela…)
   if (data.contenido_detalle) {
@@ -299,40 +293,8 @@ export function use(objName, targetName) {
 
     print(`Intentando usar ${obj.nombre} sobre ${targetObj.nombre}`);
 
-    // CASO 1-A: OBJETO DE DESTINO TIENE requiere_obj
-    if (Array.isArray(targetObj.requiere_obj)) {
-      const faltan = targetObj.requiere_obj.filter(r => !state.inventory.includes(r));
-      if (faltan.length) {
-        print(`Para abrir ${targetObj.nombre} faltan: ${faltan.map(r => OBJECTS[r].nombre).join(', ')}.`);
-      } else {
-        let success = false;
-        if (targetObj.tipo === 'Pasarela') {
-          if (targetObj.bloqueada) {
-            targetObj.bloqueada = false;
-            success = true;
-          }
-        } else if (targetObj.oculto) {
-          targetObj.oculto = false;
-          success = true;
-        }
-
-        if (success) {
-          print(`${targetObj.nombre} ahora accesible.`);
-          // Consumir objetos de un solo uso
-          targetObj.requiere_obj.forEach(requiredRef => {
-            if (OBJECTS[requiredRef].one_use && state.inventory.includes(requiredRef)) {
-              consumeObject(requiredRef);
-            }
-          });
-        } else {
-          print(`${targetObj.nombre} ya estaba accesible.`);
-        }
-      }
-      scrollToBottom();
-      return;
-    }
-
-    // CASO 1-B: OBJETO DE DESTINO TIENE SISTEMA DE ESTADOS
+    
+    // CASO 1-A: OBJETO DE DESTINO TIENE SISTEMA DE ESTADOS
     // Objeto con descripciones_estado y estado_actual (sistema genérico de cambio de estado)
     if (targetObj.descripciones_estado && targetObj.estado_actual) {
       const currentState = targetObj.descripciones_estado[targetObj.estado_actual];
@@ -398,7 +360,7 @@ export function use(objName, targetName) {
       }
     }
 
-    // CASO 1-C: CREACIÓN GENÉRICA DE OBJETOS
+    // CASO 1-B: CREACIÓN GENÉRICA DE OBJETOS
     // Si el objeto actual se puede usar con este destino para crear algo nuevo
     if (obj.usable_con && obj.usable_con.includes(targetRef) && obj.crea_objeto) {
       const nuevoObjRef = obj.crea_objeto;
@@ -465,40 +427,7 @@ export function use(objName, targetName) {
 
   // CASO 2: USO DE UN OBJETO SIN TARGET (use X)
   
-  // CASO 2-A: OBJETOS QUE REQUIEREN OTROS OBJETOS PARA FUNCIONAR
-  if (obj.requiere_obj) {
-    const faltan = obj.requiere_obj.filter(r => !state.inventory.includes(r));
-    if (faltan.length) {
-      print(`Para usar ${obj.nombre}, faltan: ${faltan.map(r => OBJECTS[r].nombre).join(', ')}.`);
-    } else {
-      let success = false;
-      if (obj.tipo === 'Pasarela') {
-        if (obj.bloqueada) {
-          obj.bloqueada = false;
-          success = true;
-        }
-      } else if (obj.oculto) {
-        obj.oculto = false;
-        success = true;
-      }
-      
-      if (success) {
-        print(`${obj.nombre} ahora accesible.`);
-        // Consumir objetos de un solo uso
-        obj.requiere_obj.forEach(requiredRef => {
-          if (OBJECTS[requiredRef].one_use && state.inventory.includes(requiredRef)) {
-            consumeObject(requiredRef);
-          }
-        });
-      } else {
-        print(`${obj.nombre} ya estaba accesible.`);
-      }
-    }
-    scrollToBottom();
-    return;
-  }
-  
-  // CASO 2-B: OBJETOS QUE REQUIEREN CONTRASEÑA
+  // CASO 2-A: OBJETOS QUE REQUIEREN CONTRASEÑA
   if (obj.requiere_pass) {
     const keys = Object.keys(obj.requiere_pass);
     state.pending = {
@@ -512,7 +441,7 @@ export function use(objName, targetName) {
     return;
   }
   
-  // CASO 2-C: SISTEMAS INTERACTIVOS
+  // CASO 2-B: SISTEMAS INTERACTIVOS
   if (obj.sistema) {
     const dialog = obj.dialogues.find(d =>
       d.superado === false || !state.puzzleStates[d.superado]
@@ -534,7 +463,7 @@ export function use(objName, targetName) {
     return;
   }
   
-  // CASO 2-D: OBJETOS CON CONTENIDO DETALLE (DOCUMENTOS, MANUALES, ETC.)
+  // CASO 2-C: OBJETOS CON CONTENIDO DETALLE (DOCUMENTOS, MANUALES, ETC.)
   if (obj.contenido_detalle) {
     const titulo = obj.tipo === 'Nota' ? 'Contenido de la nota' : `Contenido de ${obj.nombre}`;
     print(`\n--- ${titulo} ---\n${obj.contenido_detalle}\n-------------------`);

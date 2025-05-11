@@ -102,7 +102,7 @@ export const OBJECTS = {
     Cable_Red_En_Proceso: {
       tipo: 'Item',
       recogible: true,
-      nombre: 'Cable de Red (en proceso)',
+      nombre: 'Cable de Red UTP',
       descripcion_base: 'Un trozo de cable de red UTP cortado de la bobina.',
       oculto: true, // Se crea al usar alicates con bobina
       estado_actual: 'sin_pelar',
