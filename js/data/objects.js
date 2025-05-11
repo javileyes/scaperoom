@@ -47,8 +47,80 @@ export const OBJECTS = {
     Mesa_Trabajo_1:{tipo:'Decoracion',nombre:'Mesa de Trabajo',
       descripcion:'Herramientas y componentes de PC esparcidos.'},
   
-    Caja_Herramientas:{tipo:'Decoracion',nombre:'Caja de Herramientas',
-      descripcion:'Destornilladores, alicates, crimpadora…'},
+    Caja_Herramientas: {
+      tipo: 'Decoracion',
+      nombre: 'Caja de Herramientas',
+      descripcion: 'Destornilladores, alicates, crimpadora y otras herramientas.',
+      oculto: false,
+      contenidos: ['Bobina_Cable', 'Alicates', 'Crimpadora', 'Pelacables', 'Conectores_RJ45']
+    },
+
+    // Herramientas y materiales para fabricar el cable
+    Bobina_Cable: {
+      tipo: 'Item',
+      recogible: true,
+      nombre: 'Bobina de Cable RJ-45 UTP Cat6',
+      descripcion: 'Carrete de cable de red profesional, suficiente para varios metros.',
+      oculto: true,
+      usable_con: ['Alicates']
+    },
+
+    Alicates: {
+      tipo: 'Item',
+      recogible: true,
+      nombre: 'Alicates',
+      descripcion: 'Herramientas para cortar cables y otros materiales.',
+      oculto: true
+    },
+
+    Crimpadora: {
+      tipo: 'Item',
+      recogible: true,
+      nombre: 'Crimpadora',
+      descripcion: 'Herramienta especializada para prensar conectores RJ-45.',
+      oculto: true
+    },
+
+    Pelacables: {
+      tipo: 'Item',
+      recogible: true,
+      nombre: 'Pelacables',
+      descripcion: 'Herramienta con cuchilla especial para quitar recubrimiento de cables sin dañar los hilos.',
+      oculto: true
+    },
+
+    Conectores_RJ45: {
+      tipo: 'Item',
+      recogible: true,
+      nombre: 'Conectores RJ-45',
+      descripcion: 'Pequeña bolsa con conectores transparentes para terminar cables de red.',
+      oculto: true
+    },
+
+    // Cable en proceso con estados múltiples
+    Cable_Red_En_Proceso: {
+      tipo: 'Item',
+      recogible: true,
+      nombre: 'Cable de Red (en proceso)',
+      descripcion_base: 'Un trozo de cable de red UTP cortado de la bobina.',
+      oculto: true, // Se crea al usar alicates con bobina
+      estado_actual: 'sin_pelar',
+      descripciones_estado: {
+        'sin_pelar': {
+          descripcion: 'Cable de red recién cortado de la bobina, con el revestimiento exterior intacto.',
+          siguiente: 'pelado_destrenzado',
+          necesita: ['Pelacables']
+        },
+        'pelado_destrenzado': {
+          descripcion: 'Cable de red con los extremos pelados, mostrando los pares de hilos de cobre trenzados.',
+          siguiente: 'listo',
+          necesita: ['Crimpadora', 'Conectores_RJ45'] // Necesita ambos para el siguiente estado
+        },
+        'listo': {
+          descripcion: 'Latiguillo de red UTP Cat6 terminado, con conectores RJ-45 en ambos extremos, listo para usar.'
+        }
+      }
+    },  
   
     Armario_Rack:{tipo:'Decoracion',nombre:'Armario Rack',
       descripcion:'Contiene switches, routers y patch-panels.'},
@@ -102,14 +174,27 @@ Intenta simplificar el número de comandos, los más importantes para realizar l
     Portatil_Tecnico:{tipo:'Decoracion',nombre:'Portátil del Técnico',
       descripcion:'Consola abierta; el técnico no te deja tocar.'},
     
-    SRV_DC01:{tipo:'Dispositivo',nombre:'Servidor SRV-DC01',
-      descripcion:'Servidor HP ProLiant 2U con luz roja parpadeando.',
-      estado:'offline_disconnected',
-      usable_con:['Cable_Red_Nuevo_Caja'],
-          descripciones_estado: { // Descripciones basadas en el estado
-        'offline_disconnected': 'Servidor HP ProLiant 2U con luz roja parpadeando.',
-        'offline_connected': 'Servidor HP ProLiant 2U con luz verde.'},
-        // el estado se cambia al conectar/desconectar el cable
+    SRV_DC01: {
+      tipo: 'Dispositivo',
+      nombre: 'Servidor SRV-DC01',
+      descripcion_base: 'Servidor HP ProLiant 2U en rack.',
+      estado_actual: 'offline_disconnected',
+      usable_con: ['Cable_Red_En_Proceso', 'Cable_Red_Nuevo_Caja'],
+      descripciones_estado: {
+        'offline_disconnected': {
+          descripcion: 'Servidor HP ProLiant 2U con luz roja parpadeando.',
+          siguiente: 'offline_connected',
+          necesita: ['Cable_Red_En_Proceso', 'Cable_Red_Nuevo_Caja'] // Cualquiera de estos cables sirve
+        },
+        'offline_connected': {
+          descripcion: 'Servidor HP ProLiant 2U con luz verde.',
+          siguiente: 'online',
+          necesita: ['Terminal_Admin'] // Por ejemplo, si luego se quiere encender desde terminal
+        },
+        'online': {
+          descripcion: 'Servidor HP ProLiant 2U encendido y funcionando correctamente.'
+        }
+      }
     },
     Terminal_Admin: {
       tipo: 'Dispositivo',

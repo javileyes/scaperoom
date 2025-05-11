@@ -96,20 +96,30 @@ export function examine(name) {
     return;
   }
 
-  const data   = search[ref];
+  const data = search[ref];
   const prefix = data.rol ? 'Observas a' : 'Examinas';
-  let currentDescription = data.descripcion; // Descripción por defecto
-
-  // Comprobar si hay descripciones basadas en estado para este objeto
-  if (data.tipo === 'Dispositivo' && data.descripciones_estado) {
-    const stateKey = `${ref}_estado`; // Construye la clave del estado, ej: "SRV_DC01_estado"
-    const currentState = state.puzzleStates[stateKey];
-    if (currentState && data.descripciones_estado[currentState]) {
-      currentDescription = data.descripciones_estado[currentState];
+  
+  // Determinar la descripción basada en estado si existe
+  let currentDescription = data.descripcion || data.descripcion_base || '';
+  
+  if (data.descripciones_estado && data.estado_actual) {
+    const estadoObj = data.descripciones_estado[data.estado_actual];
+    if (estadoObj) {
+      currentDescription = estadoObj.descripcion || currentDescription;
     }
   }
 
-  print(`${prefix} ${data.nombre}: ${currentDescription}`); // Usar la descripción determinada
+  print(`${prefix} ${data.nombre}: ${currentDescription}`);
+  
+  // Mostrar información sobre requisitos para cambiar el estado si existe
+  if (data.descripciones_estado && data.estado_actual) {
+    const estadoObj = data.descripciones_estado[data.estado_actual];
+    if (estadoObj && estadoObj.siguiente && estadoObj.necesita) {
+      const necesitaTexto = estadoObj.necesita.map(r => OBJECTS[r]?.nombre || r).join(', ');
+      // print(`Para avanzar a la siguiente fase necesitas: ${necesitaTexto}`);
+      print("Podríamos hacer algo con esto...");
+    }
+  }
 
   // requisitos genéricos
   if (data.requiere_pass) {
@@ -243,239 +253,296 @@ function consumeObject(objectRefToRemove) {
 }
 
 /* --- use (cables, nota, dispositivos IOS) ----------------------------- */
+/* --- use (genérico para todos los objetos) --------------------------- */
 export function use(objName, targetName) {
   const room = getRoom();
-  const ref  = findRefByName(objName, OBJECTS); // ref del objeto origen (X)
-  const obj  = OBJECTS[ref]; // El objeto origen (X)
+  const ref = findRefByName(objName, OBJECTS);
+  const obj = OBJECTS[ref];
 
-  // ── if “use X on Y” y Y.requiere_obj ───────────────────────────
+  if (!obj) {
+    print(`No existe tal cosa como '${objName}'.`);
+    scrollToBottom();
+    return;
+  }
+
+  // Verificar si el objeto de origen está en el inventario o visible en la sala
+  const isObjAccessible = state.inventory.includes(ref) || 
+                         (room.objetos && room.objetos.includes(ref) && !obj.oculto);
+
+  if (!isObjAccessible && obj.tipo !== 'Pasarela') {
+    print(`No puedes usar '${obj.nombre}' porque no está accesible.`);
+    scrollToBottom();
+    return;
+  }
+
+  // CASO 1: USO DE UN OBJETO SOBRE OTRO OBJETO (use X on Y)
   if (targetName) {
-    const tRef = findRefByName(targetName, OBJECTS); // tRef es el ID del objeto destino (Y)
-    if (tRef) {
-      const tObj = OBJECTS[tRef]; // tObj es el objeto destino (Y)
-      if (Array.isArray(tObj.requiere_obj)) {
-        const faltan = tObj.requiere_obj.filter(r => !state.inventory.includes(r));
-        if (faltan.length) {
-          print(
-            `Para abrir ${tObj.nombre} faltan: ` +
-            `${faltan.map(r => OBJECTS[r].nombre).join(', ')}.`
-          );
-        } else { // Todos los objetos requeridos por tObj están en el inventario
-          let success = false;
-          if (tObj.tipo === 'Pasarela') {
-            if (tObj.bloqueada) {
-                tObj.bloqueada = false;
-                success = true;
-            }
-          } else {
-            if (tObj.oculto) {
-                tObj.oculto = false;
-                success = true;
-            }
-          }
+    const targetRef = findRefByName(targetName, OBJECTS);
+    if (!targetRef) {
+      print(`No veo '${targetName}' por aquí.`);
+      scrollToBottom();
+      return;
+    }
 
-          if (success) {
-            print(`${tObj.nombre} ahora accesible.`);
-            // Consumir TODOS los objetos one_use que eran parte del requisito
-            tObj.requiere_obj.forEach(requiredRef => {
-              const requiredObj = OBJECTS[requiredRef];
-              // Se comprueba si el objeto requerido estaba en el inventario (condición para ser "usado")
-              if (requiredObj.one_use && state.inventory.includes(requiredRef)) { 
-                consumeObject(requiredRef);
-              }
-            });
-          } else {
-            print(`${tObj.nombre} ya estaba accesible o no cambió de estado.`);
+    const targetObj = OBJECTS[targetRef];
+    
+    // Verificar si el objeto de destino está visible o es una pasarela
+    const isTargetAccessible = (room.objetos && room.objetos.includes(targetRef) && !targetObj.oculto) ||
+                               (targetObj.tipo === 'Pasarela' && room.salidas && room.salidas[targetRef]);
+                               
+    if (!isTargetAccessible) {
+      print(`No puedes usar nada sobre '${targetObj.nombre}' porque no está accesible.`);
+      scrollToBottom();
+      return;
+    }
+
+    print(`Intentando usar ${obj.nombre} sobre ${targetObj.nombre}`);
+
+    // CASO 1-A: OBJETO DE DESTINO TIENE requiere_obj
+    if (Array.isArray(targetObj.requiere_obj)) {
+      const faltan = targetObj.requiere_obj.filter(r => !state.inventory.includes(r));
+      if (faltan.length) {
+        print(`Para abrir ${targetObj.nombre} faltan: ${faltan.map(r => OBJECTS[r].nombre).join(', ')}.`);
+      } else {
+        let success = false;
+        if (targetObj.tipo === 'Pasarela') {
+          if (targetObj.bloqueada) {
+            targetObj.bloqueada = false;
+            success = true;
           }
+        } else if (targetObj.oculto) {
+          targetObj.oculto = false;
+          success = true;
+        }
+
+        if (success) {
+          print(`${targetObj.nombre} ahora accesible.`);
+          // Consumir objetos de un solo uso
+          targetObj.requiere_obj.forEach(requiredRef => {
+            if (OBJECTS[requiredRef].one_use && state.inventory.includes(requiredRef)) {
+              consumeObject(requiredRef);
+            }
+          });
+        } else {
+          print(`${targetObj.nombre} ya estaba accesible.`);
+        }
+      }
+      scrollToBottom();
+      return;
+    }
+
+    // CASO 1-B: OBJETO DE DESTINO TIENE SISTEMA DE ESTADOS
+    // Objeto con descripciones_estado y estado_actual (sistema genérico de cambio de estado)
+    if (targetObj.descripciones_estado && targetObj.estado_actual) {
+      const currentState = targetObj.descripciones_estado[targetObj.estado_actual];
+      
+      // Si el estado actual tiene un estado siguiente y requisitos
+      if (currentState && currentState.siguiente && currentState.necesita) {
+        // Verificar si el objeto usado está entre los necesarios para la transición
+        if (currentState.necesita.includes(ref)) {
+          // Verificar si todos los demás objetos requeridos están en el inventario
+          const faltantes = currentState.necesita
+            .filter(r => r !== ref) // Excluir el objeto que estamos usando
+            .filter(r => !state.inventory.includes(r)); // Ver qué falta
+          
+          if (faltantes.length === 0) {
+            // Todos los requisitos cumplidos, realizar transición de estado
+            const estadoAnterior = targetObj.estado_actual;
+            targetObj.estado_actual = currentState.siguiente;
+            
+            // Mensaje de éxito
+            print(`Has usado ${obj.nombre} correctamente sobre ${targetObj.nombre}.`);
+            
+            // Si hay nueva descripción, mostrarla
+            const nuevoEstadoObj = targetObj.descripciones_estado[targetObj.estado_actual];
+            if (nuevoEstadoObj && nuevoEstadoObj.descripcion) {
+              print(`Ahora: ${nuevoEstadoObj.descripcion}`);
+            }
+            
+            // Si el objeto usado es de un solo uso, consumirlo
+            if (obj.one_use) {
+              consumeObject(ref);
+            }
+            
+            // CASO ESPECIAL: Si el objeto es SRV_DC01, sincronizar con puzzleStates para compatibilidad
+            if (targetRef === 'SRV_DC01') {
+              state.puzzleStates['SRV_DC01_estado'] = targetObj.estado_actual;
+            }
+            
+            // CASO ESPECIAL: TRANSFORMACIÓN DE OBJETOS
+            // Si el estado resultante debe crear un nuevo objeto
+            if (nuevoEstadoObj && nuevoEstadoObj.crea_objeto) {
+              const nuevoObjRef = nuevoEstadoObj.crea_objeto;
+              if (OBJECTS[nuevoObjRef]) {
+                if (!room.objetos) {
+                  room.objetos = [];
+                }
+                if (!room.objetos.includes(nuevoObjRef)) {
+                  room.objetos.push(nuevoObjRef);
+                  OBJECTS[nuevoObjRef].oculto = false;
+                  print(`Se ha creado: ${OBJECTS[nuevoObjRef].nombre}`);
+                }
+              }
+            }
+          } else {
+            // Faltan requisitos
+            const textoDeFaltantes = faltantes.map(r => OBJECTS[r].nombre).join(', ');
+            print(`No puedes avanzar porque te faltan: ${textoDeFaltantes}`);
+          }
+        } else {
+          print(`${obj.nombre} no es útil para este propósito.`);
         }
         scrollToBottom();
         return;
       }
     }
+
+    // CASO 1-C: CREACIÓN GENÉRICA DE OBJETOS
+    // Si el objeto actual se puede usar con este destino para crear algo nuevo
+    if (obj.usable_con && obj.usable_con.includes(targetRef) && obj.crea_objeto) {
+      const nuevoObjRef = obj.crea_objeto;
+      
+      // Verificar si el objeto ya existe en la sala o el inventario
+      const objetoYaExiste = (room.objetos && room.objetos.includes(nuevoObjRef)) || 
+                            state.inventory.includes(nuevoObjRef);
+      
+      if (!objetoYaExiste) {
+        // Crear el nuevo objeto
+        if (!room.objetos) {
+          room.objetos = [];
+        }
+        room.objetos.push(nuevoObjRef);
+        OBJECTS[nuevoObjRef].oculto = false;
+        
+        print(`Has creado: ${OBJECTS[nuevoObjRef].nombre}`);
+        
+        // Consumir objeto de origen si es de un solo uso
+        if (obj.one_use) {
+          consumeObject(ref);
+        }
+      } else {
+        print(`Ya existe un ${OBJECTS[nuevoObjRef].nombre}.`);
+      }
+      scrollToBottom();
+      return;
+    }
+    
+    // Caso inverso: si el objeto destino puede usarse con este origen para crear algo
+    if (targetObj.usable_con && targetObj.usable_con.includes(ref) && targetObj.crea_objeto) {
+      const nuevoObjRef = targetObj.crea_objeto;
+      
+      // Verificar si el objeto ya existe
+      const objetoYaExiste = (room.objetos && room.objetos.includes(nuevoObjRef)) || 
+                            state.inventory.includes(nuevoObjRef);
+      
+      if (!objetoYaExiste) {
+        // Crear el nuevo objeto
+        if (!room.objetos) {
+          room.objetos = [];
+        }
+        room.objetos.push(nuevoObjRef);
+        OBJECTS[nuevoObjRef].oculto = false;
+        
+        print(`Has creado: ${OBJECTS[nuevoObjRef].nombre}`);
+        
+        // Consumir el objeto de origen si es de un solo uso
+        if (obj.one_use) {
+          consumeObject(ref);
+        }
+      } else {
+        print(`Ya existe un ${OBJECTS[nuevoObjRef].nombre}.`);
+      }
+      scrollToBottom();
+      return;
+    }
+
+    // Si llegamos aquí, es porque no hay una acción definida
+    print(`Usar ${obj.nombre} sobre ${targetObj.nombre} no produce ningún efecto.`);
+    scrollToBottom();
+    return;
   }
 
-  // 1) Caso requiere_obj (en el caso de que no haya targetName, usar X en sí mismo si X requiere_obj)
-  if (!targetName && obj?.requiere_obj) {
-    const faltan = obj.requiere_obj.filter(r=>!state.inventory.includes(r));
+  // CASO 2: USO DE UN OBJETO SIN TARGET (use X)
+  
+  // CASO 2-A: OBJETOS QUE REQUIEREN OTROS OBJETOS PARA FUNCIONAR
+  if (obj.requiere_obj) {
+    const faltan = obj.requiere_obj.filter(r => !state.inventory.includes(r));
     if (faltan.length) {
-      print(
-        `Para usar ${obj.nombre}, faltan: ${faltan.map(r=>OBJECTS[r].nombre).join(', ')}.`
-      );
+      print(`Para usar ${obj.nombre}, faltan: ${faltan.map(r => OBJECTS[r].nombre).join(', ')}.`);
     } else {
       let success = false;
-      if (obj.tipo==='Pasarela') {
+      if (obj.tipo === 'Pasarela') {
         if (obj.bloqueada) {
-            obj.bloqueada = false;
-            success = true;
+          obj.bloqueada = false;
+          success = true;
         }
-      } else {
-        if (obj.oculto) {
-            obj.oculto = false;
-            success = true;
-        }
+      } else if (obj.oculto) {
+        obj.oculto = false;
+        success = true;
       }
+      
       if (success) {
         print(`${obj.nombre} ahora accesible.`);
-        // Consumir TODOS los objetos one_use que eran parte del requisito
+        // Consumir objetos de un solo uso
         obj.requiere_obj.forEach(requiredRef => {
-            const requiredObj = OBJECTS[requiredRef];
-            if (requiredObj.one_use && state.inventory.includes(requiredRef)) {
-                consumeObject(requiredRef);
-            }
+          if (OBJECTS[requiredRef].one_use && state.inventory.includes(requiredRef)) {
+            consumeObject(requiredRef);
+          }
         });
       } else {
-         print(`${obj.nombre} ya estaba accesible o no cambió de estado.`);
+        print(`${obj.nombre} ya estaba accesible.`);
       }
     }
     scrollToBottom();
     return;
   }
-
-  // 2) Caso requiere_pass
-  if (!targetName && obj?.requiere_pass) {
+  
+  // CASO 2-B: OBJETOS QUE REQUIEREN CONTRASEÑA
+  if (obj.requiere_pass) {
     const keys = Object.keys(obj.requiere_pass);
     state.pending = {
-      ref, type:'pass',
-      keys, idx:0,
+      ref, type: 'pass',
+      keys, idx: 0,
       creds: obj.requiere_pass,
-      inputs:{}
+      inputs: {}
     };
-    print(`Introduce ${keys[0]}:`); scrollToBottom();
+    print(`Introduce ${keys[0]}:`);
+    scrollToBottom();
     return;
   }
-
- 
-
-  // ── modo “conversación” con un sistema ──────────────────────
-  const sysRef = findRefByName(
-    objName,
-    Object.fromEntries((room.objetos||[]).map(r => [r, OBJECTS[r]]))
-  );
-  if (!targetName && sysRef && OBJECTS[sysRef].sistema) {
-    const sys    = OBJECTS[sysRef];
-    const dialog = sys.dialogues.find(d =>
+  
+  // CASO 2-C: SISTEMAS INTERACTIVOS
+  if (obj.sistema) {
+    const dialog = obj.dialogues.find(d =>
       d.superado === false || !state.puzzleStates[d.superado]
     );
 
-    // 1) Guardar contexto del NPC/sistema anterior
     saveCurrentNpcContext();
-
-    // 2) Cambiar a este “sistema” y cargar su contexto previo
-    state.currentNpcRef       = sysRef;
-    state.currentAiName       = sys.nombre;
+    state.currentNpcRef = ref;
+    state.currentAiName = obj.nombre;
     state.currentSystemPrompt = dialog.system_prompt;
-    loadNpcContext(sysRef);
+    loadNpcContext(ref);
 
-    // 3) Mostrar saludo y añadirlo al history
-    print(`\n--- Conectado a ${sys.nombre} ---`, 'game-message');
-    print(`${sys.nombre}: ${dialog.saludo}`, 'ai-response');
-    state.conversationHistory.push({ role:'assistant', content:dialog.saludo });
+    print(`\n--- Conectado a ${obj.nombre} ---`, 'game-message');
+    print(`${obj.nombre}: ${dialog.saludo}`, 'ai-response');
+    state.conversationHistory.push({ role: 'assistant', content: dialog.saludo });
 
     updatePrompt();
     scrollToBottom();
     if (window.depuracion) updateDebug();
     return;
   }
-
-  // Para los siguientes usos específicos (cables, notas, etc.),
-  // el objeto principal (objName, ya resuelto a 'ref' y 'obj') 
-  // debe estar en el inventario o ser un objeto visible en la sala.
-
-  if (!obj) { // 'obj' fue definido al inicio de la función como OBJECTS[ref]
-    print(`No existe tal cosa como '${objName}'.`);
-    scrollToBottom();
-    return;
-  }
-
-  const isInInventory = state.inventory.includes(ref); // 'ref' es el ID de objName
-  const isInRoomAndVisible = room.objetos?.includes(ref) && !obj.oculto;
-
-  // Si no es un caso especial ya manejado (requiere_*, sistema)
-  // y el objeto no está en el inventario ni es un objeto visible en la sala,
-  // entonces no se puede usar de esta manera.
-  if (!isInInventory && !isInRoomAndVisible) {
-    // Si es una pasarela, ya debería haber sido manejada por requiere_pass/obj o no es usable así.
-    if (obj.tipo === 'Pasarela') {
-        print(`No puedes usar '${obj.nombre}' de esa manera.`);
-    } else {
-        print(`No puedes usar '${obj.nombre}' porque no está accesible (ni en tu inventario ni visible aquí).`);
-    }
-    scrollToBottom();
-    return;
-  }
   
-  // targetRef (para "use X on Y")
-  let targetObj = null; // Para el objeto destino
-  if (targetName) {
-    const tRef = findRefByName(targetName, OBJECTS);
-    if (!tRef || !room.objetos?.includes(tRef) && !OBJECTS[tRef].tipo === 'Pasarela' /* Permitir pasarelas como target */) {
-        // El objetivo (targetName) debe ser un objeto visible en la sala o una pasarela.
-        const targetPool = Object.fromEntries(
-            (room.objetos || []).filter(r => !OBJECTS[r]?.oculto).map(r => [r, OBJECTS[r]])
-        );
-        Object.keys(room.salidas || {}).forEach(r => targetPool[r] = OBJECTS[r]); // Añadir pasarelas al pool de búsqueda para target
-
-        const foundTargetRef = findRefByName(targetName, targetPool);
-        if (!foundTargetRef) {
-            print(`No ves '${targetName}' aquí para usar algo sobre él.`);
-            scrollToBottom();
-            return;
-        }
-        targetObj = OBJECTS[foundTargetRef];
-    } else {
-        targetObj = OBJECTS[tRef];
-    }
-  }
-
-  // Mensaje de intento
-  print(
-    `Intentando usar ${obj.nombre}` +
-    (targetObj ? ` sobre ${targetObj.nombre}` : '')
-  );
-
-  // conexiones de cables a servidor
-  if (
-    (ref === 'Cable_Red_Nuevo_Caja') &&
-    targetObj && targetObj === OBJECTS['SRV_DC01'] // Comparar con la referencia directa al objeto servidor
-  ) {
-    const key = 'SRV_DC01_estado';
-    let success = false;
-    if (state.puzzleStates[key] === 'offline_disconnected') {
-      state.puzzleStates[key] = 'offline_connected';
-      print('Conectas el cable. La luz de red se vuelve verde.');
-      success = true;
-    } else if (state.puzzleStates[key] === 'offline_connected') {
-      print('El servidor ya tiene cable.');
-    } else {
-      print('No tiene efecto.');
-    }
-
-    if (success && obj.one_use) { // obj es el cable (OBJECTS[ref])
-        consumeObject(ref);
-    }
+  // CASO 2-D: OBJETOS CON CONTENIDO DETALLE (DOCUMENTOS, MANUALES, ETC.)
+  if (obj.contenido_detalle) {
+    const titulo = obj.tipo === 'Nota' ? 'Contenido de la nota' : `Contenido de ${obj.nombre}`;
+    print(`\n--- ${titulo} ---\n${obj.contenido_detalle}\n-------------------`);
     scrollToBottom();
     return;
   }
 
-  // leer nota
-  if (ref === 'Nota_Profesor' && !targetRef) {
-    print(
-      '\n--- Contenido de la nota ---\n' +
-      obj.contenido_detalle +
-      '\n---------------------------'
-    );
-    scrollToBottom();
-    return;
-  }
-
-  // manual Cisco
-  if (ref === 'Manual_Cisco' && !targetRef) {
-    print('\n' + obj.contenido_detalle);
-    scrollToBottom();
-    return;
-  }
-
-  print('No ocurre nada.');
+  // Si llegamos aquí, no hay un uso definido
+  print(`No ocurre nada al usar ${obj.nombre}.`);
   scrollToBottom();
 }
 
