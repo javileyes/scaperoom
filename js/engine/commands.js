@@ -366,11 +366,6 @@ export function use(objName, targetName) {
               consumeObject(ref);
             }
             
-            // CASO ESPECIAL: Si el objeto es SRV_DC01, sincronizar con puzzleStates para compatibilidad
-            if (targetRef === 'SRV_DC01') {
-              state.puzzleStates['SRV_DC01_estado'] = targetObj.estado_actual;
-            }
-            
             // CASO ESPECIAL: TRANSFORMACIÓN DE OBJETOS
             // Si el estado resultante debe crear un nuevo objeto
             if (nuevoEstadoObj && nuevoEstadoObj.crea_objeto) {

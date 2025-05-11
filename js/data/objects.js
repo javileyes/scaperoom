@@ -188,30 +188,27 @@ Intenta simplificar el número de comandos, los más importantes para realizar l
     Portatil_Tecnico:{tipo:'Decoracion',nombre:'Portátil del Técnico',
       descripcion:'Consola abierta; el técnico no te deja tocar.'},
     
-    SRV_DC01: {
+    Servidor_oracle: {
       tipo: 'Dispositivo',
-      nombre: 'Servidor SRV-DC01',
-      descripcion_base: 'Servidor HP ProLiant 2U en rack.',
+      nombre: 'Servidor Oracle',
+      descripcion_base: 'Servidor en rack Oracle versión 11g.',
       estado_actual: 'offline_disconnected',
       descripciones_estado: {
         'offline_disconnected': {
-          descripcion: 'Servidor HP ProLiant 2U con luz roja parpadeando.',
-          siguiente: 'offline_connected',
+          descripcion: 'Servidor en rack Oracle 2U con luz roja parpadeando.',
+          siguiente: 'online_connected',
           necesita: ['Latiguillo_Red_Terminado'], // Requiere el latiguillo para conectarse
         },
-        'offline_connected': {
-          descripcion: 'Servidor HP ProLiant 2U con luz verde.',
-          siguiente: 'online',
-          necesita: ['Terminal_Admin'] // Por ejemplo, si luego se quiere encender desde terminal
-        },
-        'online': {
-          descripcion: 'Servidor HP ProLiant 2U encendido y funcionando correctamente.'
+        'online_connected': {
+          descripcion: 'Servidor en rack Oracle 2U con luz verde.',
+          siguiente: 'online',      
         }
       }
     },
-    Terminal_Admin: {
+    
+    Ordenador_torre: {
       tipo: 'Dispositivo',
-      nombre: 'Terminal de Administración',
+      nombre: 'Viejo ordenador de Torre',
       descripcion: 'Vieja torre con monitor CRT: prompt "Usuario:" parpadea.',
       requiere_pass: { usuario: 'admin', password: 'password123' }
     },
