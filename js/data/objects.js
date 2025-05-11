@@ -62,7 +62,8 @@ export const OBJECTS = {
       nombre: 'Bobina de Cable RJ-45 UTP Cat6',
       descripcion: 'Carrete de cable de red profesional, suficiente para varios metros.',
       oculto: true,
-      usable_con: ['Alicates']
+      usable_con: ['Alicates'],
+      crea_objeto: 'Cable_Red_En_Proceso' // Añadido: indica qué objeto se crea al usarla con Alicates
     },
 
     Alicates: {

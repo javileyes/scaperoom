@@ -288,8 +288,9 @@ export function use(objName, targetName) {
     
     // Verificar si el objeto de destino está visible o es una pasarela
     const isTargetAccessible = (room.objetos && room.objetos.includes(targetRef) && !targetObj.oculto) ||
-                               (targetObj.tipo === 'Pasarela' && room.salidas && room.salidas[targetRef]);
-                               
+                              (targetObj.tipo === 'Pasarela' && room.salidas && room.salidas[targetRef]) ||
+                              state.inventory.includes(targetRef);
+
     if (!isTargetAccessible) {
       print(`No puedes usar nada sobre '${targetObj.nombre}' porque no está accesible.`);
       scrollToBottom();

@@ -96,29 +96,34 @@ function populateTargets(){
   ui.targetSelect.size = Math.max(2, Math.min(opts.length + 1, 10)); // Ajustar tamaño dinámicamente
 }
 
-  function populateTargets2(){ // Para el segundo objetivo de /use obj on target2
-    const room = getRoom();
-    const opts = [];
-    // Objetos visibles en sala (incluyendo pasarelas si son objetivos válidos para "on")
-    // Pasarelas como segundo objetivo de "use X on Y"
-    Object.keys(room.salidas||{}).forEach(r => {
-        // Añadir pasarelas si pueden ser objetivo de una acción "on"
-        // Por ejemplo, si tienen requiere_obj para ser abiertas con otro objeto
-        if (OBJECTS[r].requiere_obj || OBJECTS[r].requiere_pass) { // Ampliar según necesidad
-            opts.push({ref:r, label:OBJECTS[r].nombre});
-        }
-    });
-    // Objetos normales en la sala
-    (room.objetos||[])
-      .filter(r=>!OBJECTS[r].oculto)
-      .forEach(r=>opts.push({ref:r, label:OBJECTS[r].nombre}));
-    
-    ui.target2Select.innerHTML =
-      '<option value=""></option>' +
-      opts.map(o=>`<option value="${o.ref}">${o.label}</option>`).join('');
-    ui.target2Select.value = ''; // Resetear selección
-    ui.target2Select.size = Math.max(2, Math.min(opts.length + 1, 10)); // Ajustar tamaño
-  }  
+function populateTargets2(){ // Para el segundo objetivo de /use obj on target2
+  const room = getRoom();
+  const opts = [];
+  
+  // 1. Pasarelas como segundo objetivo de "use X on Y"
+  Object.keys(room.salidas||{}).forEach(r => {
+      // Añadir pasarelas si pueden ser objetivo de una acción "on"
+      if (OBJECTS[r].requiere_obj || OBJECTS[r].requiere_pass) {
+          opts.push({ref:r, label:OBJECTS[r].nombre});
+      }
+  });
+  
+  // 2. Objetos normales en la sala
+  (room.objetos||[])
+    .filter(r=>!OBJECTS[r].oculto)
+    .forEach(r=>opts.push({ref:r, label:OBJECTS[r].nombre}));
+  
+  // 3. Objetos del inventario (AÑADIDO)
+  state.inventory.forEach(ref => {
+    opts.push({ref, label:OBJECTS[ref].nombre});
+  });
+  
+  ui.target2Select.innerHTML =
+    '<option value=""></option>' +
+    opts.map(o=>`<option value="${o.ref}">${o.label}</option>`).join('');
+  ui.target2Select.value = ''; // Resetear selección
+  ui.target2Select.size = Math.max(2, Math.min(opts.length + 1, 10)); // Ajustar tamaño
+}
 
   function initSelectors(){
     // … existing populateActions/Targets …
