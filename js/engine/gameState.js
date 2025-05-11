@@ -31,7 +31,7 @@ export function initializePuzzleStates(){
   // Puzzles (hitos)
   s['raul_asked_sql'] = false;
   s['raul_gave_credentials'] = false;
-  s['javier_passed'] = false;
+  s['javier_passed'] = true;
   s['configuracion_switch'] = false;
 
   return s;

@@ -116,8 +116,8 @@ export function examine(name) {
     const estadoObj = data.descripciones_estado[data.estado_actual];
     if (estadoObj && estadoObj.siguiente && estadoObj.necesita) {
       const necesitaTexto = estadoObj.necesita.map(r => OBJECTS[r]?.nombre || r).join(', ');
-      // print(`Para avanzar a la siguiente fase necesitas: ${necesitaTexto}`);
-      print("Podríamos hacer algo con esto...");
+      print(`Ummm... falta: ${necesitaTexto}`);
+      // print("Podríamos hacer algo con esto...");
     }
   }
 
@@ -243,10 +243,48 @@ function consumeObject(objectRefToRemove) {
     room.objetos = room.objetos.filter(itemRef => itemRef !== objectRefToRemove);
   }
   
-  print(`${objToConsume.nombre} ha desaparecido después de su uso.`, 'game-message');
+  print(`${objToConsume.nombre} se ha usado correctamente.`, 'game-message');
 }
 
 /* --- use (cables, nota, dispositivos IOS) ----------------------------- */
+// Función auxiliar para transformar un objeto en otro
+function transformObject(sourceRef, targetRef, toolName) {
+  const room = getRoom();
+  const sourceObj = OBJECTS[sourceRef];
+  const targetObj = OBJECTS[targetRef];
+  
+  if (!targetObj) {
+    print(`Error en la transformación: objeto destino no encontrado.`);
+    scrollToBottom();
+    return;
+  }
+  
+  // Eliminar el objeto origen del inventario o de la sala
+  let fromInventory = false;
+  if (state.inventory.includes(sourceRef)) {
+    state.inventory = state.inventory.filter(item => item !== sourceRef);
+    fromInventory = true;
+  } else if (room.objetos) {
+    room.objetos = room.objetos.filter(item => item !== sourceRef);
+  }
+  
+  // Crear el nuevo objeto
+  targetObj.oculto = false;
+  
+  // Colocarlo donde estaba el original
+  if (fromInventory) {
+    state.inventory.push(targetRef);
+  } else {
+    if (!room.objetos) {
+      room.objetos = [];
+    }
+    room.objetos.push(targetRef);
+  }
+  
+  print(`Has usado ${toolName} con ${sourceObj.nombre} y se ha transformado en: ${targetObj.nombre}.`);
+  scrollToBottom();
+  return true;
+}
 /* --- use (genérico para todos los objetos) --------------------------- */
 export function use(objName, targetName) {
   const room = getRoom();
@@ -292,6 +330,7 @@ export function use(objName, targetName) {
     }
 
     print(`Intentando usar ${obj.nombre} sobre ${targetObj.nombre}`);
+    scrollToBottom();
 
     
     // CASO 1-A: OBJETO DE DESTINO TIENE SISTEMA DE ESTADOS
@@ -364,28 +403,19 @@ export function use(objName, targetName) {
     // Si el objeto actual se puede usar con este destino para crear algo nuevo
     if (obj.usable_con && obj.usable_con.includes(targetRef) && obj.crea_objeto) {
       const nuevoObjRef = obj.crea_objeto;
-      
-      // Verificar si el objeto ya existe en la sala o el inventario
-      const objetoYaExiste = (room.objetos && room.objetos.includes(nuevoObjRef)) || 
-                            state.inventory.includes(nuevoObjRef);
-      
-      if (!objetoYaExiste) {
-        // Crear el nuevo objeto
-        if (!room.objetos) {
-          room.objetos = [];
-        }
-        room.objetos.push(nuevoObjRef);
-        OBJECTS[nuevoObjRef].oculto = false;
+      if (!room.objetos) {
+        room.objetos = [];
+      }     
+      room.objetos.push(nuevoObjRef);
+      OBJECTS[nuevoObjRef].oculto = false;
         
-        print(`Has creado: ${OBJECTS[nuevoObjRef].nombre}`);
+      print(`Has creado: ${OBJECTS[nuevoObjRef].nombre}`);
         
-        // Consumir objeto de origen si es de un solo uso
-        if (obj.one_use) {
-          consumeObject(ref);
-        }
-      } else {
-        print(`Ya existe un ${OBJECTS[nuevoObjRef].nombre}.`);
+      // Consumir objeto de origen si es de un solo uso
+      if (obj.one_use) {
+        consumeObject(ref);
       }
+     
       scrollToBottom();
       return;
     }
@@ -394,29 +424,51 @@ export function use(objName, targetName) {
     if (targetObj.usable_con && targetObj.usable_con.includes(ref) && targetObj.crea_objeto) {
       const nuevoObjRef = targetObj.crea_objeto;
       
-      // Verificar si el objeto ya existe
-      const objetoYaExiste = (room.objetos && room.objetos.includes(nuevoObjRef)) || 
-                            state.inventory.includes(nuevoObjRef);
-      
-      if (!objetoYaExiste) {
-        // Crear el nuevo objeto
-        if (!room.objetos) {
-          room.objetos = [];
-        }
-        room.objetos.push(nuevoObjRef);
-        OBJECTS[nuevoObjRef].oculto = false;
-        
-        print(`Has creado: ${OBJECTS[nuevoObjRef].nombre}`);
-        
-        // Consumir el objeto de origen si es de un solo uso
-        if (obj.one_use) {
-          consumeObject(ref);
-        }
-      } else {
-        print(`Ya existe un ${OBJECTS[nuevoObjRef].nombre}.`);
+      if (!room.objetos) {
+        room.objetos = [];
       }
+      room.objetos.push(nuevoObjRef);
+      OBJECTS[nuevoObjRef].oculto = false;
+      
+      print(`Has creado: ${OBJECTS[nuevoObjRef].nombre}`);
+      
+      // Consumir el objeto de origen si es de un solo uso
+      if (obj.one_use) {
+        consumeObject(ref);
+      }
+
       scrollToBottom();
       return;
+    }
+
+    // CASO 1-C: TRANSFORMACIÓN DE OBJETOS
+    if (targetObj.transforma_con === ref) {
+      // Caso simple: un solo objeto necesario para transformar
+      return transformObject(targetRef, targetObj.transforma_en, obj.nombre);
+    }
+
+    if (obj.transforma_con === targetRef) {
+      // Caso inverso: el objeto de origen se transforma al usarse sobre el destino
+      return transformObject(ref, obj.transforma_en, targetObj.nombre);
+    }
+
+    // Caso complejo: múltiples objetos necesarios para la transformación
+    if (targetObj.transforma_con_todos && targetObj.transforma_con_todos.includes(ref)) {
+      // Verificar si todos los demás objetos requeridos están en el inventario
+      const faltantes = targetObj.transforma_con_todos
+        .filter(r => r !== ref) // Excluir el objeto que estamos usando
+        .filter(r => !state.inventory.includes(r)); // Ver qué falta
+      
+      if (faltantes.length === 0) {
+        // Todos los requisitos cumplidos, transformar el objeto
+        return transformObject(targetRef, targetObj.transforma_en, obj.nombre);
+      } else {
+        // Faltan requisitos
+        const textoDeFaltantes = faltantes.map(r => OBJECTS[r]?.nombre || r).join(', ');
+        print(`Para completar esta transformación debes coger antes: ${textoDeFaltantes}`);
+        scrollToBottom();
+        return;
+      }
     }
 
     // Si llegamos aquí, es porque no hay una acción definida
@@ -523,7 +575,7 @@ export function cross(name) {
   }
 
   const pasarela = OBJECTS[ref];
-  
+
   // Verificar si está bloqueada (existente)
   if (OBJECTS[ref].bloqueada) {
     print(OBJECTS[ref].mensaje_bloqueo || 'Está bloqueada.');

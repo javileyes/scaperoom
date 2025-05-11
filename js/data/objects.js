@@ -69,9 +69,9 @@ export const OBJECTS = {
       descripcion: 'Carrete de cable de red profesional, suficiente para varios metros.',
       oculto: true,
       usable_con: ['Alicates'],
-      crea_objeto: 'Cable_Red_En_Proceso' // Añadido: indica qué objeto se crea al usarla con Alicates
+      crea_objeto: 'Trozo_Cable_UTP' // Añadido: indica qué objeto se crea al usarla con Alicates
     },
-
+    
     Alicates: {
       tipo: 'Item',
       recogible: true,
@@ -79,7 +79,7 @@ export const OBJECTS = {
       descripcion: 'Herramientas para cortar cables y otros materiales.',
       oculto: true
     },
-
+    
     Crimpadora: {
       tipo: 'Item',
       recogible: true,
@@ -87,7 +87,7 @@ export const OBJECTS = {
       descripcion: 'Herramienta especializada para prensar conectores RJ-45.',
       oculto: true
     },
-
+    
     Pelacables: {
       tipo: 'Item',
       recogible: true,
@@ -95,7 +95,7 @@ export const OBJECTS = {
       descripcion: 'Herramienta con cuchilla especial para quitar recubrimiento de cables sin dañar los hilos.',
       oculto: true
     },
-
+    
     Conectores_RJ45: {
       tipo: 'Item',
       recogible: true,
@@ -103,31 +103,38 @@ export const OBJECTS = {
       descripcion: 'Pequeña bolsa con conectores transparentes para terminar cables de red.',
       oculto: true
     },
-
-    // Cable en proceso con estados múltiples
-    Cable_Red_En_Proceso: {
+    
+    // Etapa 1: Cable recién cortado
+    Trozo_Cable_UTP: {
       tipo: 'Item',
       recogible: true,
-      nombre: 'Cable de Red UTP',
-      descripcion_base: 'Un trozo de cable de red UTP cortado de la bobina.',
-      oculto: true, // Se crea al usar alicates con bobina
-      estado_actual: 'sin_pelar',
-      descripciones_estado: {
-        'sin_pelar': {
-          descripcion: 'Cable de red recién cortado de la bobina, con el revestimiento exterior intacto.',
-          siguiente: 'pelado_destrenzado',
-          necesita: ['Pelacables']
-        },
-        'pelado_destrenzado': {
-          descripcion: 'Cable de red con los extremos pelados, mostrando los pares de hilos de cobre trenzados.',
-          siguiente: 'listo',
-          necesita: ['Crimpadora', 'Conectores_RJ45'] // Necesita ambos para el siguiente estado
-        },
-        'listo': {
-          descripcion: 'Latiguillo de red UTP Cat6 terminado, con conectores RJ-45 en ambos extremos, listo para usar.'
-        }
-      }
-    },  
+      nombre: 'Trozo de Cable UTP',
+      descripcion: 'Cable de red recién cortado de la bobina, con el revestimiento exterior intacto.',
+      oculto: true,
+      transforma_con: 'Pelacables',
+      transforma_en: 'Trozo_Cable_UTP_Pelado'
+    },
+    
+    // Etapa 2: Cable pelado
+    Trozo_Cable_UTP_Pelado: {
+      tipo: 'Item',
+      recogible: true,
+      nombre: 'Trozo de Cable UTP Pelado',
+      descripcion: 'Cable de red con los extremos pelados, mostrando los pares de hilos de cobre trenzados.',
+      oculto: true,
+      transforma_con_todos: ['Crimpadora', 'Conectores_RJ45'], // Requiere ambos objetos
+      transforma_en: 'Latiguillo_Red_Terminado'
+    },
+    
+    // Etapa 3: Cable terminado (final)
+    Latiguillo_Red_Terminado: {
+      tipo: 'Item',
+      recogible: true,
+      nombre: 'Latiguillo de Red Terminado',
+      descripcion: 'Latiguillo de red UTP Cat6 terminado, con conectores RJ-45 en ambos extremos, listo para usar.',
+      oculto: true,
+      one_use: true // Se consume al usarlo con el servidor
+    },
   
     Armario_Rack:{tipo:'Decoracion',nombre:'Armario Rack',
       descripcion:'Contiene switches, routers y patch-panels.'},
@@ -190,7 +197,7 @@ Intenta simplificar el número de comandos, los más importantes para realizar l
         'offline_disconnected': {
           descripcion: 'Servidor HP ProLiant 2U con luz roja parpadeando.',
           siguiente: 'offline_connected',
-          necesita: ['Cable_Red_En_Proceso']
+          necesita: ['Latiguillo_Red_Terminado'], // Requiere el latiguillo para conectarse
         },
         'offline_connected': {
           descripcion: 'Servidor HP ProLiant 2U con luz verde.',
