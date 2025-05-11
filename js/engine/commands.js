@@ -522,7 +522,8 @@ export function cross(name) {
     return;
   }
 
-
+  const pasarela = OBJECTS[ref];
+  
   // Verificar si está bloqueada (existente)
   if (OBJECTS[ref].bloqueada) {
     print(OBJECTS[ref].mensaje_bloqueo || 'Está bloqueada.');
