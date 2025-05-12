@@ -474,6 +474,19 @@ export function use(objName, targetName) {
 
   // CASO 2: USO DE UN OBJETO SIN TARGET (use X)
   
+  // Verificar hito requerido (nuevo)
+  if (obj.hito_requerido && !state.puzzleStates[obj.hito_requerido]) {
+    print(obj.mensaje_hito_requerido || `No puedes usarlo todavía.`);
+    scrollToBottom();
+    return;
+  }
+
+  // verificar si tiene estado requerido
+  if (obj.estado_requerido && obj.estado_actual !== obj.estado_requerido) {
+    print(obj.mensaje_estado_requerido || `No puedes usarlo todavía.`);
+    scrollToBottom();
+    return;
+  }
   // CASO 2-A: OBJETOS QUE REQUIEREN CONTRASEÑA
   if (obj.requiere_pass) {
     const keys = Object.keys(obj.requiere_pass);
@@ -652,6 +665,8 @@ export async function process(raw) {
         else
           obj.oculto = false;
         print(`Acceso concedido a ${obj.nombre}.`);
+        // eliminar atributo requiere_pass (para que no vuelva a pedir tanto para pasarela como para objeto)
+        delete obj.requiere_pass;
         state.pending = null;
       }
     } else {

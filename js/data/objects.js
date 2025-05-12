@@ -6,7 +6,7 @@ export const OBJECTS = {
       nombre: 'Puerta Aula-Servidores',
       descripcion: 'Puerta metálica gris con teclado numérico.',
       // bloqueada ahora solo en state.puzzleStates
-      requiere_pass: { codigo: '192.168.1.0/24' },
+      requiere_pass: { codigo: '255.255.255.192' },
       bloqueada: true,
       hito_requerido: 'javier_passed',
       mensaje_hito_requerido: 'Javier se interpone: «Necesitas acertar 3 preguntas antes de salir».'
@@ -43,12 +43,16 @@ export const OBJECTS = {
       nombre:'Nota del Profesor',
       descripcion:'Un post-it amarillo.',
       contenido_detalle:
-        'Recordatorio: la subred de gestión es la primera subred utilizable de una red privada clase C /24.',
+        'Recordatorio: la contraseña de la puerta de servidores es la máscara /26 en formato estándar.',
       oculto:true                    // sigue oculta hasta descubrirla
     },
 
     Rack_Principal:{tipo:'Decoracion',nombre:'Rack Principal',
-      descripcion:'Rack de 19" con servidores y switches.'},
+      descripcion:'Rack de 19" con servidores y switches.',
+      contenido_detalle:
+      'Un poxit pegado en el lateral tiene escrito "Red: 10.0.0.0/16. Los servidores tienen las últimas IPs. user: quesada, password:macarena123"',
+
+    },
   
     Mesa_Trabajo_1:{tipo:'Decoracion',nombre:'Mesa de Trabajo',
       descripcion:'Herramientas y componentes de PC esparcidos.'},
@@ -144,7 +148,7 @@ export const OBJECTS = {
     tipo:    'Dispositivo',
     nombre:  'Switch Cisco',
     descripcion:
-      'Switch Cisco con CLI IOS para configurar VLANs.',
+      'Switch Cisco con un pequeño portatil conectado a modo de consola CLI IOS.',
     sistema: true,
 
     // ── definimos diálogos como en npc.js ──────────────────
@@ -191,26 +195,71 @@ Intenta simplificar el número de comandos, los más importantes para realizar l
     Servidor_oracle: {
       tipo: 'Dispositivo',
       nombre: 'Servidor Oracle',
-      descripcion_base: 'Servidor en rack Oracle versión 11g.',
+      descripcion: 'Servidor en rack Oracle versión 11g.',
+    },
+    
+
+    Ordenador_torre: {
+      tipo: 'Dispositivo',
+      sistema: true,
+      nombre: 'Viejo ordenador de Torre',
+      descripcion_base: 'Vieja torre con monitor CRT',
       estado_actual: 'offline_disconnected',
       descripciones_estado: {
         'offline_disconnected': {
-          descripcion: 'Servidor en rack Oracle 2U con luz roja parpadeando.',
+          descripcion: 'Torre con luz roja parpadeando en la tarjeta de red.',
           siguiente: 'online_connected',
           necesita: ['Latiguillo_Red_Terminado'], // Requiere el latiguillo para conectarse
         },
         'online_connected': {
-          descripcion: 'Servidor en rack Oracle 2U con luz verde.',
+          descripcion: 'Torre con tarjeta con luz verde.',
           siguiente: 'online',      
         }
+      },
+      estado_requerido: 'online_connected', // TODO: Cambiar a 'online_connected' para que funcione
+      mensaje_estado_requerido: 'El ordenador no está conectado físicamente a la red, debes primero conectarlo.',
+      mensaje_hito_requerido: 'El ordenador no está conectado a la red, primero debes conectarlo.',
+      requiere_pass: { usuario: 'quesada', password: 'macarena123' },
+          // ── definimos diálogos como en npc.js ──────────────────
+    dialogues: [
+      {
+        // mientras puzzleStates['configuracion_switch']==false, éste es el diálogo activo
+        superado: 'ip_servidor_encontrada',
+        system_prompt: `Eres un  ordenador con un sistema operativo linux.
+Compórtate estrictamente como un ordenador con un sistema operativo linux, Ya has sido logueado como "quesada".
+Tu configuración de red es erronea y no puedes acceder a la red. Tu IP y máscara es 192.168.1.10/24.
+COMPORTATE ESTRICTAMENTE COMO UN ORDENADOR CON UN SISTEMA OPERATIVO LINUX sin dar información adicional, si el usuario escribe algo que no sea un comando de linux simplemente responde "comando no encontrado".
+IMPORTANTE: Si el usuario cambia la IP y la máscara a una compatible con 10.0.0.0/16 escribirás exactamente "Parece que esta configuración de red sí es correcta! ahora vamos a ver si encontramos la IP del servidor Oracle haciendo ping".
+NOTA: La IP del servidor Oracle es: 10.0.255.254 si consigues hacer ping a esta IP debes escribir "/hito ip_servidor_encontrada superado"`,
+        saludo: 'Umm... Debo averiaguar la IP del servidor Oracle... intentaré con el comando "ifconfig" o "ip addr" para ver la configuración de red.'
+      },
+      {
+        // tras superar el hito aparece este diálogo
+        superado: 'acceso_base_datos',
+        system_prompt: `Eres un ordenador con sistema operativo linux.
+El usauario ha ejecutado comando sqldeveloper y está intentando conectarse al servidor Oracle, 
+para hacerlo deberá configurar bien los parámetros de conexión que son:
+host: "10.0.0.254"
+port: "1521",
+service_name: "orcl" (también puede ser "XE"),
+user: "quesada"
+password: "macarena123"
+IMPORTANTE: Si el usuario configura bien los parámetros de conexión escribirás exactamente "/hito acceso_base_datos superado".`,
+        saludo: `Acabo de ejecutar el cliente SqlDeveloper Estamos dentro del servidor, Ummm... me piden los parámetros de conexión uno tras otro probaré suerte con el mismo usuario y contraseña y con el puerto y servicio por defecto.
+        host:`
+      },
+      {
+        // tras superar el hito aparece este diálogo
+        superado: false,
+        system_prompt: `Eres un ordenador que está ejecutando un cliente sql.
+        Comportate estrictamente como un ordenador con un cliente sql, ya has sido logueado como "quesada".`,
+        saludo: `Acabo de entrar al cliente sql Estamos dentro del esquema quesada, Ummm... debo de averiguar las tablas que hay.
+        host:`
+      }],
+      // el map de hitos funciona idéntico al de NPCS
+      milestones: {
+        '/hito acceso_base_datos superado': 'acceso_base_datos'
       }
-    },
-    
-    Ordenador_torre: {
-      tipo: 'Dispositivo',
-      nombre: 'Viejo ordenador de Torre',
-      descripcion: 'Vieja torre con monitor CRT: prompt "Usuario:" parpadea.',
-      requiere_pass: { usuario: 'admin', password: 'password123' }
     },
   
     Manual_Ensamblaje:{tipo:'Item',recogible:false,nombre:'Manual de Ensamblaje',
