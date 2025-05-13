@@ -117,6 +117,8 @@ export function examine(name) {
     if (estadoObj && estadoObj.siguiente && estadoObj.necesita) {
       const necesitaTexto = estadoObj.necesita.map(r => OBJECTS[r]?.nombre || r).join(', ');
       print(`Ummm... falta: ${necesitaTexto}`);
+      scrollToBottom();
+      return;
       // print("Podríamos hacer algo con esto...");
     }
   }
@@ -647,6 +649,8 @@ export async function process(raw) {
   const cmd = raw.trim();
   if (!cmd) return;
 
+  // Mostrar lo que escribe el usuario con un color diferente
+  print(`jugador> ${cmd}`, 'player-input');
   // ── si estamos pidiendo contraseña ──────────────────────────────
   if (state.pending?.type==='pass') {
     const p = state.pending;

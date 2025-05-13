@@ -33,6 +33,8 @@ export function initializePuzzleStates(){
   s['raul_gave_credentials'] = false;
   s['javier_passed'] = true;
   s['configuracion_switch'] = false;
+  s['ip_servidor_encontrada'] = false;
+  s['acceso_base_datos'] = false;
 
   return s;
 }
