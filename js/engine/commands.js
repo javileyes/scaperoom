@@ -43,8 +43,7 @@ export function showLocation() {
   const objs = (room.objetos || [])
     .filter(r =>
       !state.inventory.includes(r) &&
-      OBJECTS[r]?.tipo !== 'Pasarela' &&
-      !OBJECTS[r]?.oculto
+      OBJECTS[r]?.tipo !== 'Pasarela'
     );
   if (objs.length) {
     print('\nObservas:');
@@ -130,7 +129,7 @@ export function examine(name) {
     print(`Ejecuta "/use ${data.nombre}" para introducirla.`);
   }
 
-  // resto de la lógica anterior (detalle, contenidos ocultos, bloqueo pasarela…)
+  // resto de la lógica anterior (detalle,  bloqueo pasarela…)
   if (data.contenido_detalle) {
     print('\n--- Detalle ---');
     print(data.contenido_detalle);
@@ -138,11 +137,8 @@ export function examine(name) {
   }
   if (Array.isArray(data.contenidos)) {
     data.contenidos.forEach(oRef => {
-      if (OBJECTS[oRef].oculto) {
-        OBJECTS[oRef].oculto = false;
-        if (!room.objetos.includes(oRef)) room.objetos.push(oRef);
-        print(`Al examinar ${data.nombre}, encuentras: ${OBJECTS[oRef].nombre}.`);
-      }
+      if (!room.objetos.includes(oRef)) room.objetos.push(oRef);
+      print(`Al examinar ${data.nombre}, encuentras: ${OBJECTS[oRef].nombre}.`);  
     });
   }
   if (data.tipo === 'Pasarela' && state.puzzleStates[`${ref}_bloqueada`]) {
@@ -270,8 +266,6 @@ function transformObject(sourceRef, targetRef, toolName) {
     room.objetos = room.objetos.filter(item => item !== sourceRef);
   }
   
-  // Crear el nuevo objeto
-  targetObj.oculto = false;
   
   // Colocarlo donde estaba el original
   if (fromInventory) {
@@ -301,7 +295,7 @@ export function use(objName, targetName) {
 
   // Verificar si el objeto de origen está en el inventario o visible en la sala
   const isObjAccessible = state.inventory.includes(ref) || 
-                         (room.objetos && room.objetos.includes(ref) && !obj.oculto);
+                         (room.objetos && room.objetos.includes(ref));
 
   if (!isObjAccessible && obj.tipo !== 'Pasarela') {
     print(`No puedes usar '${obj.nombre}' porque no está accesible.`);
@@ -321,7 +315,7 @@ export function use(objName, targetName) {
     const targetObj = OBJECTS[targetRef];
     
     // Verificar si el objeto de destino está visible o es una pasarela
-    const isTargetAccessible = (room.objetos && room.objetos.includes(targetRef) && !targetObj.oculto) ||
+    const isTargetAccessible = (room.objetos && room.objetos.includes(targetRef) ) ||
                               (targetObj.tipo === 'Pasarela' && room.salidas && room.salidas[targetRef]) ||
                               state.inventory.includes(targetRef);
 
@@ -378,7 +372,6 @@ export function use(objName, targetName) {
                 }
                 if (!room.objetos.includes(nuevoObjRef)) {
                   room.objetos.push(nuevoObjRef);
-                  OBJECTS[nuevoObjRef].oculto = false;
                   print(`Se ha creado: ${OBJECTS[nuevoObjRef].nombre}`);
                 }
               }
@@ -404,7 +397,6 @@ export function use(objName, targetName) {
         room.objetos = [];
       }     
       room.objetos.push(nuevoObjRef);
-      OBJECTS[nuevoObjRef].oculto = false;
         
       print(`Has creado: ${OBJECTS[nuevoObjRef].nombre}`);
         
@@ -425,7 +417,6 @@ export function use(objName, targetName) {
         room.objetos = [];
       }
       room.objetos.push(nuevoObjRef);
-      OBJECTS[nuevoObjRef].oculto = false;
       
       print(`Has creado: ${OBJECTS[nuevoObjRef].nombre}`);
       
@@ -666,8 +657,7 @@ export async function process(raw) {
         const obj = OBJECTS[p.ref];
         if (obj.tipo==='Pasarela')
           obj.bloqueada = false; 
-        else
-          obj.oculto = false;
+
         print(`Acceso concedido a ${obj.nombre}.`);
         // eliminar atributo requiere_pass (para que no vuelva a pedir tanto para pasarela como para objeto)
         delete obj.requiere_pass;

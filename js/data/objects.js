@@ -34,7 +34,6 @@ export const OBJECTS = {
       tipo:'Decoracion',
       nombre:'Mesa del Profesor',
       descripcion:'Mesa grande con papeles y una nota solitaria.',
-      oculto:false,
       contenidos:['Nota_Profesor']
     },
     Nota_Profesor:{
@@ -44,7 +43,6 @@ export const OBJECTS = {
       descripcion:'Un post-it amarillo.',
       contenido_detalle:
         'Recordatorio: la contraseña de la puerta de servidores es la máscara /26 en formato estándar.',
-      oculto:true                    // sigue oculta hasta descubrirla
     },
 
     Rack_Principal:{tipo:'Decoracion',nombre:'Rack Principal',
@@ -61,7 +59,6 @@ export const OBJECTS = {
       tipo: 'Decoracion',
       nombre: 'Caja de Herramientas',
       descripcion: 'Destornilladores, alicates, crimpadora y otras herramientas.',
-      oculto: false,
       contenidos: ['Bobina_Cable', 'Alicates', 'Crimpadora', 'Pelacables', 'Conectores_RJ45']
     },
 
@@ -71,7 +68,6 @@ export const OBJECTS = {
       recogible: true,
       nombre: 'Bobina de Cable RJ-45 UTP Cat6',
       descripcion: 'Carrete de cable de red profesional, suficiente para varios metros.',
-      oculto: true,
       usable_con: ['Alicates'],
       crea_objeto: 'Trozo_Cable_UTP' // Añadido: indica qué objeto se crea al usarla con Alicates
     },
@@ -81,7 +77,6 @@ export const OBJECTS = {
       recogible: true,
       nombre: 'Alicates',
       descripcion: 'Herramientas para cortar cables y otros materiales.',
-      oculto: true
     },
     
     Crimpadora: {
@@ -89,7 +84,6 @@ export const OBJECTS = {
       recogible: true,
       nombre: 'Crimpadora',
       descripcion: 'Herramienta especializada para prensar conectores RJ-45.',
-      oculto: true
     },
     
     Pelacables: {
@@ -97,7 +91,6 @@ export const OBJECTS = {
       recogible: true,
       nombre: 'Pelacables',
       descripcion: 'Herramienta con cuchilla especial para quitar recubrimiento de cables sin dañar los hilos.',
-      oculto: true
     },
     
     Conectores_RJ45: {
@@ -105,7 +98,6 @@ export const OBJECTS = {
       recogible: true,
       nombre: 'Conectores RJ-45',
       descripcion: 'Pequeña bolsa con conectores transparentes para terminar cables de red.',
-      oculto: true
     },
     
     // Etapa 1: Cable recién cortado
@@ -114,7 +106,6 @@ export const OBJECTS = {
       recogible: true,
       nombre: 'Trozo de Cable UTP',
       descripcion: 'Cable de red recién cortado de la bobina, con el revestimiento exterior intacto.',
-      oculto: true,
       transforma_con: 'Pelacables',
       transforma_en: 'Trozo_Cable_UTP_Pelado'
     },
@@ -125,7 +116,6 @@ export const OBJECTS = {
       recogible: true,
       nombre: 'Trozo de Cable UTP Pelado',
       descripcion: 'Cable de red con los extremos pelados, mostrando los pares de hilos de cobre trenzados.',
-      oculto: true,
       transforma_con_todos: ['Crimpadora', 'Conectores_RJ45'], // Requiere ambos objetos
       transforma_en: 'Latiguillo_Red_Terminado'
     },
@@ -136,7 +126,6 @@ export const OBJECTS = {
       recogible: true,
       nombre: 'Latiguillo de Red Terminado',
       descripcion: 'Latiguillo de red UTP Cat6 terminado, con conectores RJ-45 en ambos extremos, listo para usar.',
-      oculto: false,
       one_use: true // Se consume al usarlo con el servidor
     },
   

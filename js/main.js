@@ -41,7 +41,6 @@ function populateTargets(){
     }
     // 2) objetos visibles EN LA SALA (ya no están en inventario si se cogieron)
     (room.objetos || [])
-      .filter(r => !OBJECTS[r]?.oculto)
       .forEach(ref => opts.push({ ref, label: OBJECTS[ref].nombre }));
     // 3) NPCs
     (room.npcs || []).forEach(ref => {
@@ -62,7 +61,6 @@ function populateTargets(){
     }
     // 2) objetos visibles en sala
     (room.objetos || [])
-      .filter(r => !OBJECTS[r]?.oculto)
       .forEach(ref => opts.push({ ref, label: OBJECTS[ref].nombre }));
     // 3) tu inventario
     state.inventory.forEach(ref =>
@@ -77,7 +75,7 @@ function populateTargets(){
   }
   else if(act==='/take'){ // Para /take, solo objetos de la sala que sean recogibles
       (room.objetos || [])
-          .filter(r => !OBJECTS[r]?.oculto && OBJECTS[r]?.recogible) 
+          .filter(r => OBJECTS[r]?.recogible) 
           .forEach(ref => opts.push({ ref, label: OBJECTS[ref].nombre }));
   }
   else if(act==='/drop'){ // Para /drop (o /soltar), solo objetos del inventario
@@ -110,7 +108,6 @@ function populateTargets2(){ // Para el segundo objetivo de /use obj on target2
   
   // 2. Objetos normales en la sala
   (room.objetos||[])
-    .filter(r=>!OBJECTS[r].oculto)
     .forEach(r=>opts.push({ref:r, label:OBJECTS[r].nombre}));
   
   // 3. Objetos del inventario (AÑADIDO)
