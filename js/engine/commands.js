@@ -11,7 +11,7 @@ import {
 import { OBJECTS } from '../data/objects.js';
 import { NPCS }    from '../data/npcs.js';
 import { ROOMS }   from '../data/rooms.js';
-import { print, updatePrompt, scrollToBottom, updateDebug } from './ui.js';
+import { print, updatePrompt, scrollToBottom, updateDebug, updateHitosUI } from './ui.js';
 import { askLLM }  from './llm.js';
 import { underscoresToSpaces, spacesToUnderscores } from '../utils/helpers.js';
 
@@ -664,6 +664,29 @@ export async function process(raw) {
         // eliminar atributo requiere_pass (para que no vuelva a pedir tanto para pasarela como para objeto)
         delete obj.requiere_pass;
         state.pending = null;
+        //si es un sistema usarlo
+        if (obj.sistema) {
+          // Buscar el diálogo apropiado basado en los hitos (igual que en use)
+          const dialog = obj.dialogues.find(d =>
+            d.superado === false || !getHito(d.superado)
+          );
+        
+          saveCurrentNpcContext();
+          state.currentNpcRef = p.ref;
+          state.currentAiName = obj.nombre;
+          state.currentSystemPrompt = dialog.system_prompt;
+          loadNpcContext(p.ref);
+        
+          print(`\n--- Conectado a ${obj.nombre} ---`, 'game-message');
+          print(`${obj.nombre}: ${dialog.saludo}`, 'ai-response');
+          state.conversationHistory.push({ role: 'assistant', content: dialog.saludo });
+        
+          updatePrompt();
+          if (window.depuracion) updateDebug();
+        } else {
+          // si no es un sistema, mostrar descripción
+          examine(obj.nombre);
+        }
       }
     } else {
       print('Acceso denegado.');
@@ -752,31 +775,20 @@ export async function process(raw) {
     const llmAnswer = await askLLM(raw.trim());
     if (window.depuracion) updateDebug();
   
-    // procesar hitos genéricos en NPCS o SYSTEMS (objeto con propiedad sistema, dialogues, milestones)
     const def = NPCS[state.currentNpcRef] || OBJECTS[state.currentNpcRef];
     if (def?.milestones) {
       for (const [hito, psKey] of Object.entries(def.milestones)) {
         if (!getHito(psKey) && llmAnswer.includes(hito)) {
-          // Buscar el diálogo actual para ver si tiene conserverar_dialogo
-          let currentDialogIndex = -1;
-          let conservarDialogo = false;
+          // Guardar el estado de conservación del diálogo actual
+          let conservarDialogo = true; // Por defecto conservamos
           
-          for (let i = 0; i < def.dialogues.length; i++) {
-            const dialog = def.dialogues[i];
-            if ((dialog.superado === false && !getHito(psKey)) || 
-                (dialog.superado && dialog.superado === psKey && !getHito(psKey))) {
-              currentDialogIndex = i;
-              // Verificar si este diálogo tiene el atributo para conservar (con ambas posibles ortografías)
-              // conservarDialogo = dialog.conservar_dialogo === true;
-              conservarDialogo = dialog.conservar_dialogo !== false;
-              break;
-            }
-          }
+          // Buscar el diálogo actual
+          const currentDialog = def.dialogues.find(d => 
+            d.superado === false || (d.superado && d.superado === psKey && !getHito(psKey))
+          );
           
-          // Guardar el historial actual si es necesario conservarlo
-          let historiaConversacion = [];
-          if (conservarDialogo) {
-            historiaConversacion = [...state.conversationHistory];
+          if (currentDialog) {
+            conservarDialogo = currentDialog.conservar_dialogo !== false;
           }
           
           // Activar el hito
@@ -784,31 +796,39 @@ export async function process(raw) {
           print(`Puzzle "${psKey}" desbloqueado.`, 'game-message');
           
           // Actualizar la UI de hitos en modo debug
-          if (window.depuracion) ui.updateHitosUI();
+          if (window.depuracion) updateHitosUI();
           
-          // Si vamos a conservar el diálogo, preparamos el siguiente diálogo
-          if (conservarDialogo) {
-            // Buscar el siguiente diálogo aplicable
-            let nextDialog = null;
-            for (const dialog of def.dialogues) {
-              if (dialog.superado === false || !getHito(dialog.superado)) {
-                nextDialog = dialog;
-                break;
-              }
-            }
+          // NUEVO: Buscar el siguiente diálogo aplicable ahora que el hito está completado
+          const nextDialog = def.dialogues.find(d => 
+            d.superado === false || (d.superado && !getHito(d.superado))
+          );
+          
+          if (nextDialog) {
+            // Actualizar system prompt con el nuevo diálogo
+            state.currentSystemPrompt = nextDialog.system_prompt;
             
-            if (nextDialog) {
-              // Actualizar solo el system prompt pero mantener el historial
-              state.currentSystemPrompt = nextDialog.system_prompt;
+            // Conservar o limpiar el historial según configuración
+            if (!conservarDialogo) {
+              // Si no conservamos diálogo, limpiamos el historial
+              state.conversationHistory = [];
               
-              // Restaurar el historial conservado
-              if (historiaConversacion.length > 0) {
-                state.conversationHistory = historiaConversacion;
-                
-                // Opcionalmente añadir un mensaje de transición
-                print(`\n--- Cambio de fase de diálogo - historial preservado ---`, 'debug-info');
-              }
-            }
+              // Mostrar mensaje de transición
+              print(`\n--- ${def.nombre} cambia de actitud... ---`, 'game-message');
+              
+
+            } 
+            // Mostrar nuevo saludo inicial
+            print(`${def.nombre}: ${nextDialog.saludo}`, 'ai-response');
+
+            // Añadir el saludo al historial de conversación
+            state.conversationHistory.push({ 
+              role: 'assistant', 
+              content: nextDialog.saludo 
+            });
+            
+            // Actualizar la interfaz
+            updatePrompt();
+            if (window.depuracion) updateDebug();
           }
           
           scrollToBottom();

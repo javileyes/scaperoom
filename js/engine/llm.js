@@ -18,7 +18,7 @@ export async function askLLM(userInput){
   const messages = [
     {role:'system', content: state.currentSystemPrompt},
     ...state.conversationHistory,
-    {role:'user',   content: userInput + '/no_think'}
+    {role:'user',   content: userInput + ' /no_think'}
   ];
 
   /* Prepara línea para stream --------------------------------------------- */

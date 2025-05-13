@@ -16,7 +16,7 @@ export const OBJECTS = {
     Puerta_Aula_Taller:{tipo:'Pasarela',nombre:'Puerta Aula-Taller',
       descripcion:'Puerta de madera standard.',bloqueada:false,
       hito_requerido: 'javier_passed',
-      mensaje_hito_requerido: 'Javier se interpone: «Necesitas acertar 3 preguntas antes de salir».'
+      mensaje_hito_requerido: 'Javier se interpone, habla con Javier para que te deje pasar.'
     },
   
     Conexion_Taller_Redes:{tipo:'Pasarela',nombre:'Conexión Taller-Redes',
@@ -219,8 +219,9 @@ Compórtate estrictamente como un ordenador con un sistema operativo linux, Ya h
 Tu configuración de red es erronea y no puedes acceder a la red. Tu IP y máscara es 192.168.1.10/24.
 COMPORTATE ESTRICTAMENTE COMO UN ORDENADOR CON UN SISTEMA OPERATIVO LINUX sin dar información adicional, si el usuario escribe algo que no sea un comando de linux simplemente responde "comando no encontrado". 
 Sé muy escueto y directo, imprime muy poco texto en comandos de ayuda y no des explicaciones.
+NOTA: El uso correcto del comando "ip" será algo parecido a: "ip addr show" para mostrar configuración interfaces y "ip addr [ip/máscara] dev [interfaz]" para cambiar configuración. 
 IMPORTANTE: Si el usuario cambia la IP y la máscara a una compatible con 10.0.0.0/16 escribirás exactamente "/hito configuracion_correcta superado".`,
-        saludo: 'Pista: Umm... Parece que la configuración de red está mal intentaré primero averiguar en qué red estoy con el comando "ifconfig" o "ip addr".'
+        saludo: 'Pista: Umm... Parece que la configuración de red está mal intentaré usar el comando "ip addr" para ver configuración y cambiarla.'
       },
       {
         // mientras puzzleStates['configuracion_switch']==false, éste es el diálogo activo
@@ -229,9 +230,8 @@ IMPORTANTE: Si el usuario cambia la IP y la máscara a una compatible con 10.0.0
 Compórtate estrictamente como un ordenador con un sistema operativo linux, Ya has sido logueado como "quesada".
 COMPORTATE ESTRICTAMENTE COMO UN ORDENADOR CON UN SISTEMA OPERATIVO LINUX sin dar información adicional, si el usuario escribe algo que no sea un comando de linux simplemente responde "comando no encontrado". 
 Sé muy escueto y directo, imprime muy poco texto en comandos de ayuda y no des explicaciones.
-IMPORTANTE: Si el usuario cambia la IP y la máscara a una compatible con 10.0.0.0/16 escribirás exactamente "Parece que esta configuración de red sí es correcta! ahora vamos a ver si encontramos la IP del servidor Oracle haciendo ping".
-NOTA: La IP del servidor Oracle es: 10.0.255.254 si consigues hacer ping a esta IP debes escribir "/hito ip_servidor_encontrada superado"`,
-        saludo: 'Pista: Umm... Parece que la configuración de red está mal intentaré primero averiguar en qué red estoy con el comando "ifconfig" o "ip addr".'
+IMPORTANTE: La IP del servidor Oracle es: 10.0.255.254 si consigues hacer ping a esta IP debes escribir "/hito ip_servidor_encontrada superado"`,
+        saludo: 'Pista: Ahora tenemos que averiguar cual es la ip del servidor Oracle, podríamos usar ping".'
       },      
       {
         // tras superar el hito aparece este diálogo
@@ -245,7 +245,7 @@ service_name: "orcl" (también puede ser "XE"),
 user: "quesada"
 password: "macarena123"
 IMPORTANTE: Si el usuario configura bien los parámetros de conexión escribirás exactamente "/hito acceso_base_datos superado".`,
-        saludo: `Acabo de ejecutar el cliente SqlDeveloper Estamos dentro del servidor, Ummm... me piden los parámetros de conexión uno tras otro probaré suerte con el mismo usuario y contraseña y con el puerto y servicio por defecto.
+        saludo: `Acabas de ejecutar el cliente SqlDeveloper. Estás dentro del servidor, Ummm... piden los parámetros de conexión uno tras otro prueba suerte con el mismo usuario y contraseña y con el puerto y servicio por defecto.
         host:`
       },
       {
