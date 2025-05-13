@@ -46,10 +46,21 @@ function initDebug(){
 // función que vuelca state.conversationHistory en el <pre>
 export function updateDebug(){
   if(!window.depuracion) return;
-  const lines = state.conversationHistory.map(
+  // Mostrar el system prompt primero
+  const systemPromptLines = [
+    `SYSTEM PROMPT:`,
+    `-------------`,
+    state.currentSystemPrompt,
+    `-------------`,
+    ``,
+    `CONVERSATION:`,
+  ];
+  // Añadir el historial de conversación
+  const conversationLines = state.conversationHistory.map(
     m => `${m.role.padEnd(9)} | ${m.content}`
   );
-  debugBox.textContent = lines.join('\n');
+  // Combinar todo
+  debugBox.textContent = [...systemPromptLines, ...conversationLines].join('\n');
   
   // También actualizar la UI de hitos cuando se active el debug
   updateHitosUI();
