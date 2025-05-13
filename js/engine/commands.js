@@ -1,10 +1,12 @@
 import {
   state,
   getRoom,
-  getObj,
-  getNpc,
+  // getObj,
+  // getNpc,
   saveCurrentNpcContext,
-  loadNpcContext
+  loadNpcContext,
+  getHito,
+  setHito
 } from './gameState.js';
 import { OBJECTS } from '../data/objects.js';
 import { NPCS }    from '../data/npcs.js';
@@ -468,7 +470,7 @@ export function use(objName, targetName) {
   // CASO 2: USO DE UN OBJETO SIN TARGET (use X)
   
   // Verificar hito requerido (nuevo)
-  if (obj.hito_requerido && !state.puzzleStates[obj.hito_requerido]) {
+  if (obj.hito_requerido && !getHito(pasarela.hito_requerido)) {
     print(obj.mensaje_hito_requerido || `No puedes usarlo todavía.`);
     scrollToBottom();
     return;
@@ -497,7 +499,7 @@ export function use(objName, targetName) {
   // CASO 2-B: SISTEMAS INTERACTIVOS
   if (obj.sistema) {
     const dialog = obj.dialogues.find(d =>
-      d.superado === false || !state.puzzleStates[d.superado]
+      d.superado === false || !getHito(d.superado)
     );
 
     saveCurrentNpcContext();
@@ -542,7 +544,7 @@ export async function talk(name) {
   const npc    = NPCS[npcRef];
   // escogemos el primer diálogo cuyo `superado` aún no está true
   const dialog = npc.dialogues.find(d =>
-    d.superado === false || !state.puzzleStates[d.superado]
+    d.superado === false || !getHito(d.superado)
   );
 
   saveCurrentNpcContext();
@@ -585,7 +587,7 @@ export function cross(name) {
   }
 
   // Verificar hito requerido (nuevo)
-  if (pasarela.hito_requerido && !state.puzzleStates[pasarela.hito_requerido]) {
+  if (pasarela.hito_requerido && !getHito(pasarela.hito_requerido)) {
     print(pasarela.mensaje_hito_requerido || `No puedes pasar por aquí todavía.`);
     scrollToBottom();
     return;
@@ -755,7 +757,7 @@ export async function process(raw) {
     if (def?.milestones) {
       for (const [hito, psKey] of Object.entries(def.milestones)) {
         if (!state.puzzleStates[psKey] && llmAnswer.includes(hito)) {
-          state.puzzleStates[psKey] = true;
+          setHito(psKey, true);
           print(`Puzzle "${psKey}" desbloqueado.`, 'game-message');
           scrollToBottom();
         }

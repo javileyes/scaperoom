@@ -28,15 +28,21 @@ export function initializePuzzleStates(){
     }
   }
 
-  // Puzzles (hitos)
-  s['raul_asked_sql'] = false;
-  s['raul_gave_credentials'] = false;
-  s['javier_passed'] = true;
-  s['configuracion_switch'] = false;
-  s['ip_servidor_encontrada'] = false;
-  s['acceso_base_datos'] = false;
 
   return s;
+}
+
+export function getHito(nombre, valorPorDefecto = false) {
+  if (state.puzzleStates[nombre] === undefined) {
+    state.puzzleStates[nombre] = valorPorDefecto;
+  }
+  return state.puzzleStates[nombre];
+}
+
+// Nuevo: establece un valor para un hito
+export function setHito(nombre, valor) {
+  state.puzzleStates[nombre] = valor;
+  return valor;
 }
 
 /* ----- Getter sencillos -------------------------------------------------- */
