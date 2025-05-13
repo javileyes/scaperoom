@@ -9,7 +9,7 @@ export const OBJECTS = {
       requiere_pass: { codigo: '255.255.255.192' },
       bloqueada: true,
       hito_requerido: 'javier_passed',
-      mensaje_hito_requerido: 'Javier se interpone: «Necesitas acertar 3 preguntas antes de salir».'
+      mensaje_hito_requerido: 'Javier se interpone, habla con Javier para que te deje pasar.'
     
     },
   
@@ -213,16 +213,26 @@ Intenta simplificar el número de comandos, los más importantes para realizar l
     dialogues: [
       {
         // mientras puzzleStates['configuracion_switch']==false, éste es el diálogo activo
-        superado: 'ip_servidor_encontrada',
+        superado: 'configuracion_correcta',
         system_prompt: `Eres un  ordenador con un sistema operativo linux.
 Compórtate estrictamente como un ordenador con un sistema operativo linux, Ya has sido logueado como "quesada".
 Tu configuración de red es erronea y no puedes acceder a la red. Tu IP y máscara es 192.168.1.10/24.
 COMPORTATE ESTRICTAMENTE COMO UN ORDENADOR CON UN SISTEMA OPERATIVO LINUX sin dar información adicional, si el usuario escribe algo que no sea un comando de linux simplemente responde "comando no encontrado". 
 Sé muy escueto y directo, imprime muy poco texto en comandos de ayuda y no des explicaciones.
+IMPORTANTE: Si el usuario cambia la IP y la máscara a una compatible con 10.0.0.0/16 escribirás exactamente "/hito configuracion_correcta superado".`,
+        saludo: 'Pista: Umm... Parece que la configuración de red está mal intentaré primero averiguar en qué red estoy con el comando "ifconfig" o "ip addr".'
+      },
+      {
+        // mientras puzzleStates['configuracion_switch']==false, éste es el diálogo activo
+        superado: 'ip_servidor_encontrada',
+        system_prompt: `Eres un  ordenador con un sistema operativo linux.
+Compórtate estrictamente como un ordenador con un sistema operativo linux, Ya has sido logueado como "quesada".
+COMPORTATE ESTRICTAMENTE COMO UN ORDENADOR CON UN SISTEMA OPERATIVO LINUX sin dar información adicional, si el usuario escribe algo que no sea un comando de linux simplemente responde "comando no encontrado". 
+Sé muy escueto y directo, imprime muy poco texto en comandos de ayuda y no des explicaciones.
 IMPORTANTE: Si el usuario cambia la IP y la máscara a una compatible con 10.0.0.0/16 escribirás exactamente "Parece que esta configuración de red sí es correcta! ahora vamos a ver si encontramos la IP del servidor Oracle haciendo ping".
 NOTA: La IP del servidor Oracle es: 10.0.255.254 si consigues hacer ping a esta IP debes escribir "/hito ip_servidor_encontrada superado"`,
         saludo: 'Pista: Umm... Parece que la configuración de red está mal intentaré primero averiguar en qué red estoy con el comando "ifconfig" o "ip addr".'
-      },
+      },      
       {
         // tras superar el hito aparece este diálogo
         superado: 'acceso_base_datos',
@@ -248,6 +258,7 @@ IMPORTANTE: Si el usuario configura bien los parámetros de conexión escribirá
       }],
       // el map de hitos funciona idéntico al de NPCS
       milestones: {
+        '/hito configuracion_correcta superado': 'configuracion_correcta',
         '/hito ip_servidor_encontrada superado': 'ip_servidor_encontrada',
         '/hito acceso_base_datos superado': 'acceso_base_datos'
       }

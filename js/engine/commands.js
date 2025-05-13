@@ -756,12 +756,60 @@ export async function process(raw) {
     const def = NPCS[state.currentNpcRef] || OBJECTS[state.currentNpcRef];
     if (def?.milestones) {
       for (const [hito, psKey] of Object.entries(def.milestones)) {
-        if (!state.puzzleStates[psKey] && llmAnswer.includes(hito)) {
+        if (!getHito(psKey) && llmAnswer.includes(hito)) {
+          // Buscar el diálogo actual para ver si tiene conserverar_dialogo
+          let currentDialogIndex = -1;
+          let conservarDialogo = false;
+          
+          for (let i = 0; i < def.dialogues.length; i++) {
+            const dialog = def.dialogues[i];
+            if ((dialog.superado === false && !getHito(psKey)) || 
+                (dialog.superado && dialog.superado === psKey && !getHito(psKey))) {
+              currentDialogIndex = i;
+              // Verificar si este diálogo tiene el atributo para conservar (con ambas posibles ortografías)
+              // conservarDialogo = dialog.conservar_dialogo === true;
+              conservarDialogo = dialog.conservar_dialogo !== false;
+              break;
+            }
+          }
+          
+          // Guardar el historial actual si es necesario conservarlo
+          let historiaConversacion = [];
+          if (conservarDialogo) {
+            historiaConversacion = [...state.conversationHistory];
+          }
+          
+          // Activar el hito
           setHito(psKey, true);
           print(`Puzzle "${psKey}" desbloqueado.`, 'game-message');
           
-          // Actualizar la UI de hitos si está en modo debug
+          // Actualizar la UI de hitos en modo debug
           if (window.depuracion) ui.updateHitosUI();
+          
+          // Si vamos a conservar el diálogo, preparamos el siguiente diálogo
+          if (conservarDialogo) {
+            // Buscar el siguiente diálogo aplicable
+            let nextDialog = null;
+            for (const dialog of def.dialogues) {
+              if (dialog.superado === false || !getHito(dialog.superado)) {
+                nextDialog = dialog;
+                break;
+              }
+            }
+            
+            if (nextDialog) {
+              // Actualizar solo el system prompt pero mantener el historial
+              state.currentSystemPrompt = nextDialog.system_prompt;
+              
+              // Restaurar el historial conservado
+              if (historiaConversacion.length > 0) {
+                state.conversationHistory = historiaConversacion;
+                
+                // Opcionalmente añadir un mensaje de transición
+                print(`\n--- Cambio de fase de diálogo - historial preservado ---`, 'debug-info');
+              }
+            }
+          }
           
           scrollToBottom();
         }
@@ -770,14 +818,6 @@ export async function process(raw) {
     return;
   }
     
-    // if (state.currentNpcRef==='Switch_Cisco' &&
-    //          llmAnswer.includes('/hito configuración_switch superado')) {
-    //   state.puzzleStates['configuracion_switch'] = true;
-    //   print('Switch Cisco: Configuración aceptada.', 'ai-response');
-    //   scrollToBottom();
-    // }
-   
-
   // ── 3) sin comando ni NPC ─────────────────────────────────────────
   print('Usa /talk o /use para interactuar.');
   scrollToBottom();
