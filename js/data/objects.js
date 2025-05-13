@@ -136,7 +136,7 @@ export const OBJECTS = {
       recogible: true,
       nombre: 'Latiguillo de Red Terminado',
       descripcion: 'Latiguillo de red UTP Cat6 terminado, con conectores RJ-45 en ambos extremos, listo para usar.',
-      oculto: true,
+      oculto: false,
       one_use: true // Se consume al usarlo con el servidor
     },
   
@@ -208,17 +208,17 @@ Intenta simplificar el número de comandos, los más importantes para realizar l
       descripciones_estado: {
         'offline_disconnected': {
           descripcion: 'Torre con luz roja parpadeando en la tarjeta de red.',
-          siguiente: 'online_connected',
+          siguiente: 'online_disconnected',
           necesita: ['Latiguillo_Red_Terminado'], // Requiere el latiguillo para conectarse
         },
-        'online_connected': {
+        'online_disconnected': {
           descripcion: 'Torre con tarjeta con luz verde.',
           siguiente: 'online',      
         }
       },
-      estado_requerido: 'online_connected', // TODO: Cambiar a 'online_connected' para que funcione
+      estado_requerido: 'online_disconnected', // TODO: Cambiar a 'online_connected' para que funcione
       mensaje_estado_requerido: 'El ordenador no está conectado físicamente a la red, debes primero conectarlo.',
-      mensaje_hito_requerido: 'El ordenador no está conectado a la red, primero debes conectarlo.',
+      // mensaje_hito_requerido: 'El ordenador no está conectado a la red, primero debes conectarlo.',
       requiere_pass: { usuario: 'quesada', password: 'macarena123' },
           // ── definimos diálogos como en npc.js ──────────────────
     dialogues: [
@@ -228,10 +228,11 @@ Intenta simplificar el número de comandos, los más importantes para realizar l
         system_prompt: `Eres un  ordenador con un sistema operativo linux.
 Compórtate estrictamente como un ordenador con un sistema operativo linux, Ya has sido logueado como "quesada".
 Tu configuración de red es erronea y no puedes acceder a la red. Tu IP y máscara es 192.168.1.10/24.
-COMPORTATE ESTRICTAMENTE COMO UN ORDENADOR CON UN SISTEMA OPERATIVO LINUX sin dar información adicional, si el usuario escribe algo que no sea un comando de linux simplemente responde "comando no encontrado".
+COMPORTATE ESTRICTAMENTE COMO UN ORDENADOR CON UN SISTEMA OPERATIVO LINUX sin dar información adicional, si el usuario escribe algo que no sea un comando de linux simplemente responde "comando no encontrado". 
+Sé muy escueto y directo, imprime muy poco texto en comandos de ayuda y no des explicaciones.
 IMPORTANTE: Si el usuario cambia la IP y la máscara a una compatible con 10.0.0.0/16 escribirás exactamente "Parece que esta configuración de red sí es correcta! ahora vamos a ver si encontramos la IP del servidor Oracle haciendo ping".
 NOTA: La IP del servidor Oracle es: 10.0.255.254 si consigues hacer ping a esta IP debes escribir "/hito ip_servidor_encontrada superado"`,
-        saludo: 'Umm... Debo averiaguar la IP del servidor Oracle... intentaré con el comando "ifconfig" o "ip addr" para ver la configuración de red.'
+        saludo: 'Pista: Umm... Parece que la configuración de red está mal intentaré primero averiguar en qué red estoy con el comando "ifconfig" o "ip addr".'
       },
       {
         // tras superar el hito aparece este diálogo
@@ -258,6 +259,7 @@ IMPORTANTE: Si el usuario configura bien los parámetros de conexión escribirá
       }],
       // el map de hitos funciona idéntico al de NPCS
       milestones: {
+        '/hito ip_servidor_encontrada superado': 'ip_servidor_encontrada',
         '/hito acceso_base_datos superado': 'acceso_base_datos'
       }
     },
