@@ -470,7 +470,7 @@ export function use(objName, targetName) {
   // CASO 2: USO DE UN OBJETO SIN TARGET (use X)
   
   // Verificar hito requerido (nuevo)
-  if (obj.hito_requerido && !getHito(pasarela.hito_requerido)) {
+  if (obj.hito_requerido && !getHito(obj.hito_requerido)) {
     print(obj.mensaje_hito_requerido || `No puedes usarlo todavía.`);
     scrollToBottom();
     return;
@@ -759,6 +759,10 @@ export async function process(raw) {
         if (!state.puzzleStates[psKey] && llmAnswer.includes(hito)) {
           setHito(psKey, true);
           print(`Puzzle "${psKey}" desbloqueado.`, 'game-message');
+          
+          // Actualizar la UI de hitos si está en modo debug
+          if (window.depuracion) ui.updateHitosUI();
+          
           scrollToBottom();
         }
       }
