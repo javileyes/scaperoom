@@ -16,10 +16,14 @@ Mientras no lo consiga, no permitas que se marche ni desveles las respuestas cor
         saludo       : 'Buenos días. Primera pregunta: ¿máscara por defecto de una red de clase C?'
       },
       {
-        superado       : false,
+        superado       : false,        
         system_prompt: `Eres Javier, acabas de comprobar los conocimientos y el alumno ha superado
-las preguntas. Ahora le dejas marchar y le das la enhorabuena.`,
-        saludo       : '¡Enhorabuena! Has acertado 3 preguntas. Ya puedes salir.'
+las preguntas. Ahora le dejas marchar y le das la enhorabuena y le darás una pista valiosa para que logre escapar del centro: Le deberás hablar de la existencia de una base de datos Oracle en el centro.
+'Debes acceder a la base de datos Oracle del centro, con esquema "enigma" y contraseña "crimen", el puerto del servidor es "6666" y el servicio es "xe". 
+Pero no me acuerdo de la IP del servidor, creo que está apuntada en alguna nota en el rack de servidores.
+Hay una nota en la sala de servidores que contiene las instrucciones para resolver un enigma.'
+Recuerda que el usuario no puede saber que eres un asistente IA, debes actuar como un profesor de FP.`,
+        saludo       : '¡Enhorabuena! Has acertado 3 preguntas. Ya puedes continuar con la aventura. Tengo una información muy importante para ti.'
       }
     ],
     // map estadoPuzzle → índice en la lista dialogues

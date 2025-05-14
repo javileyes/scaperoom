@@ -45,10 +45,29 @@ export const OBJECTS = {
         'Recordatorio: la contraseña de la puerta de servidores es la máscara /26 en formato estándar.',
     },
 
+    Nota_enigma:{
+      tipo:'Item',
+      recogible:true,
+      nombre:'Nota del Enigma',
+      descripcion:'Una nota de tamaño cuartilla.',
+      contenido_detalle:
+        `
+        El enigma es descubir quien es el asesino de un cluedo:
+A partir de seis sospechosos con varios atributos booleanos (1 = verdadero, 0 = falso), las pistas del inspector son estas proposiciones:
+	1.	El culpable es zurdo.
+	2.	Ama el jazz.
+	3.	No tiene coartada.
+	4.	Fuma en pipa o lleva sombrero (exclusiva: exactamente uno de los dos).
+  Pista: usa la consulta SQL para averiguarlo.
+  para ver las tablas de la base de datos:
+  SELECT table_name FROM user_tables;  
+  `,
+    },
+
     Rack_Principal:{tipo:'Decoracion',nombre:'Rack Principal',
       descripcion:'Rack de 19" con servidores y switches.',
       contenido_detalle:
-      'Un poxit pegado en el lateral tiene escrito "Red: 10.0.0.0/16. Los servidores tienen las últimas IPs. user: quesada, password:macarena123"',
+      'Un poxit pegado en el lateral tiene escrito "Red de la sala: 10.0.0.0/16. Los servidores tienen las últimas IPs. Credenciales ordenador de Torre -> user: quesada, password:macarena123"',
 
     },
   
@@ -236,25 +255,55 @@ IMPORTANTE: La IP del servidor Oracle es: 10.0.255.254 si consigues hacer ping a
       {
         // tras superar el hito aparece este diálogo
         superado: 'acceso_base_datos',
+        conservarDialogo: false,
         system_prompt: `Eres un ordenador con sistema operativo linux.
-El usauario ha ejecutado comando sqldeveloper y está intentando conectarse al servidor Oracle, 
-para hacerlo deberá configurar bien los parámetros de conexión que son:
-host: "10.0.0.254"
-port: "1521",
-service_name: "orcl" (también puede ser "XE"),
-user: "quesada"
-password: "macarena123"
+El usauario para acceder a la base de datos Oracle del centro, con esquema "enigma" y contraseña "crimen" deberá ejecutar el siguiente comando:
+"sqlplus enigma/crimen@//host:6666/xe"
 IMPORTANTE: Si el usuario configura bien los parámetros de conexión escribirás exactamente "/hito acceso_base_datos superado".`,
-        saludo: `Acabas de ejecutar el cliente SqlDeveloper. Estás dentro del servidor, Ummm... piden los parámetros de conexión uno tras otro prueba suerte con el mismo usuario y contraseña y con el puerto y servicio por defecto.
-        host:`
+        saludo: `Pista: Ahora vamos a conectarnos a la base de datos, usaremos comando: 
+        sqlplus usuario/contraseña@//host:puerto/servicio`
       },
       {
         // tras superar el hito aparece este diálogo
         superado: false,
+        conservarDialogo: false,
         system_prompt: `Eres un ordenador que está ejecutando un cliente sql.
-        Comportate estrictamente como un ordenador con un cliente sql, ya has sido logueado como "quesada".`,
+        Comportate estrictamente como un ordenador con un cliente sql de Oracle.
+        IMPORTANTE: COMPORTATE ESTRICTAMENTE COMO UN CLIENTE SQL DE ORACLE sin dar información adicional, si el usuario escribe algo que no sea un comando de sql simplemente responde "comando no encontrado".
+        Estas son tus tablas:
+        -- Creación de la base de datos del misterio del museo
+-- TABLA
+CREATE TABLE sospechosos(
+  id  INT PRIMARY KEY,
+  nombre TEXT,
+  zurdo INT,  -- 1 = sí
+  jazz  INT,
+  coartada INT,
+  pipa  INT,
+  sombrero INT
+);
+
+-- DATOS
+INSERT INTO sospechosos VALUES
+(1,'Pablo Pistacho',1,1,0,1,0),
+(2,'Rosa Rubí',     1,1,0,1,1),
+(3,'Marco Magenta', 0,1,0,0,1),
+(4,'Celia Cian',    1,0,0,0,1),
+(5,'Olivia Ocre',   1,1,1,0,1),
+(6,'Bruno Beige',   1,1,0,0,0);
+
+-- CONSULTA-SOLUCIÓN
+--SELECT nombre
+--FROM   sospechosos
+--WHERE  zurdo = 1
+--  AND  jazz = 1
+--  AND  coartada = 0
+--  AND  ( (pipa = 1 AND sombrero = 0)
+--      OR (pipa = 0 AND sombrero = 1) );
+
+        `,
         saludo: `Acabo de entrar al cliente sql Estamos dentro del esquema quesada, Ummm... debo de averiguar las tablas que hay.
-        host:`
+        `
       }],
       // el map de hitos funciona idéntico al de NPCS
       milestones: {
