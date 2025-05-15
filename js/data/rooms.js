@@ -22,7 +22,7 @@ export const ROOMS = {
     Taller_Hardware : {
       nombre:'Taller de Hardware',
       descripcion:'Un caos organizado de componentes de ordenador...',
-      objetos:['Mesa_Trabajo_1','Caja_Herramientas','Manual_Ensamblaje'],
+      objetos:['Mesa_Trabajo_1','Caja_Herramientas','Manual_Cableado', 'Manual_Cisco'],
       npcs:['Emilio_ProfesorHardware'],
       salidas:{
         Puerta_Aula_Taller:{ destino:'Aula_Teoria'},
@@ -33,7 +33,7 @@ export const ROOMS = {
     Zona_Redes : {
       nombre:'Zona de Redes',
       descripcion:'Dominada por un armario rack de comunicaciones abierto...',
-      objetos:['Armario_Rack','Switch_Cisco','Patch_Panel','Portatil_Tecnico','Manual_Cisco'],
+      objetos:['Armario_Rack','Switch_Cisco','Patch_Panel'],
       salidas:{ Conexion_Taller_Redes:{ destino:'Taller_Hardware'} }
     }
   };

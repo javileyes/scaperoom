@@ -95,7 +95,7 @@ A partir de seis sospechosos con varios atributos booleanos (1 = verdadero, 0 = 
       nombre: 'Caja de Herramientas',
       descripcion: 'Destornilladores, alicates, crimpadora y otras herramientas.',
       contenidos: ['Bobina_Cable', 'Alicates', 'Crimpadora', 'Pelacables', 'Conectores_RJ45'],
-      hito_requerido: 'configuración_switch',
+      hito_requerido: 'configuracion_switch',
       mensaje_hito_requerido: 'Emilio dice: oye deja mis cosas, solo los buenos alumnos pueden coger mis cosas.'
     },
 
@@ -185,12 +185,12 @@ A partir de seis sospechosos con varios atributos booleanos (1 = verdadero, 0 = 
         system_prompt: `Eres un Switch Cisco IOS. 
 Compórtate estrictamente como un switch Cisco IOS configurado por defecto y sin contraseñas, empezando 
 desde el terminal en modo no privilegiado. 
-Sé minimalista, sin información adicional ni de compilación. 
+Sé minimalista, por cada comando que escriba el usuario responderás únicamente con la salida del comando pedido. 
 Solo ejecuta el comando que el usario te pida (ninguno más).
 El comando de ayuda es "?" o "help" solo imprimirá los comandos disponibles en el nivel actual.
 IMPORTANTE: Al configurar VLAN 10 para "alumnos" en puertos 1–20 
 y VLAN 20 para "profesores" en puertos 21–24, 
-debes emitir "/hito configuración_switch superado". 
+debes emitir "/hito configuracion_switch superado". 
 Intenta simplificar el número de comandos, los más importantes para realizar la tarea encomendada. 
 (enable, exit, configure) y de VLAN/interfaces. `,
         saludo: 'Consola IOS lista. help o ? para ayuda.'
@@ -207,7 +207,7 @@ Intenta simplificar el número de comandos, los más importantes para realizar l
 
     // el map de hitos funciona idéntico al de NPCS
     milestones: {
-      '/hito configuración_switch superado': 'configuracion_switch'
+      '/hito configuracion_switch superado': 'configuracion_switch'
     }
   },
   /* … resto de OBJECTS … */
@@ -274,7 +274,7 @@ IMPORTANTE: La IP del servidor Oracle es: 10.0.255.254 si consigues hacer ping a
         superado: 'acceso_base_datos',
         conservarDialogo: false,
         system_prompt: `Eres un ordenador con sistema operativo linux.
-El usauario para acceder a la base de datos Oracle del centro, con esquema "enigma" y contraseña "crimen" deberá ejecutar el siguiente comando:
+El usauario para acceder a la base de datos Oracle del departamento, con esquema "enigma" y contraseña "crimen" deberá ejecutar el siguiente comando:
 "sqlplus enigma/crimen@//host:6666/xe"
 IMPORTANTE: Si el usuario configura bien los parámetros de conexión escribirás exactamente "/hito acceso_base_datos superado".`,
         saludo: `Pista: Ahora vamos a conectarnos a la base de datos, usaremos comando: 
@@ -330,8 +330,15 @@ INSERT INTO sospechosos VALUES
       }
     },
   
-    Manual_Ensamblaje:{tipo:'Item',recogible:false,nombre:'Manual de Ensamblaje',
-      descripcion:'Cómo montar un PC paso a paso.'},
+    Manual_Cableado:{tipo:'Item',recogible:true,nombre:'Manual de Cableado',
+      descripcion:`Cómo pelar y crimpar cableado UTP.
+      Pasos esenciales para crimpar un cable UTP:
+	1.	Corta el cable a la longitud deseada con un corte recto.
+	2.	Pela ~2 cm de la funda exterior sin dañar los hilos.
+	3.	Ordena los 8 conductores según la norma (T568B suele usarse: blanco-naranja, naranja, blanco-verde, azul, blanco-azul, verde, blanco-marrón, marrón).
+	4.	Recorta las puntas alineadas a unos 13 mm y deslízalas en el conector RJ-45 (pestaña abajo).
+	5.	Crimpa firmemente; la garra debe prensar la funda.
+  `},
   
     Manual_Cisco: {
       tipo:     'Item',

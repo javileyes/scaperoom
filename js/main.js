@@ -74,10 +74,14 @@ function populateTargets(){
     });
   }
   else if(act==='/take'){ // Para /take, solo objetos de la sala que sean recogibles
-      (room.objetos || [])
-          .filter(r => OBJECTS[r]?.recogible) 
-          .forEach(ref => opts.push({ ref, label: OBJECTS[ref].nombre }));
-  }
+    (room.objetos || [])
+        .filter(r => {
+            // Depuración para ver qué objetos se están procesando
+            // console.log(`Filtrando objeto: ${r} - recogible: ${OBJECTS[r]?.recogible}`);
+            return OBJECTS[r]?.recogible === true;
+        })
+        .forEach(ref => opts.push({ ref, label: OBJECTS[ref].nombre }));
+}
   else if(act==='/drop'){ // Para /drop (o /soltar), solo objetos del inventario
       state.inventory.forEach(ref => {
           opts.push({ ref, label: OBJECTS[ref].nombre });
