@@ -97,6 +97,14 @@ export function examine(name) {
     return;
   }
 
+  // Verificar hito requerido (nuevo)
+  let obj = search[ref];
+  if (obj.hito_requerido && !getHito(obj.hito_requerido)) {
+    print(obj.mensaje_hito_requerido || `No puedes examinarlo todavía.`);
+    scrollToBottom();
+    return;
+  }
+
   const data = search[ref];
   const prefix = data.rol ? 'Observas a' : 'Examinas';
   

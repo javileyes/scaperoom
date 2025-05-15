@@ -25,10 +25,26 @@ export const OBJECTS = {
   
     /* Decoraciones, dispositivos, items -------------------------- */
     Pizarra_Blanca:{tipo:'Decoracion',nombre:'Pizarra Blanca',
-      descripcion:'Cubierta de diagramas de topologías, IP y máscaras.'},
+      descripcion:`Hay un plano del Departamento de Informática:
+        +------------------------+                       ººººººººººººº
+        |  Cuarto de Servidores  |===(p. del oráculo)=== º  SALIDA   º
+        +------------------------+                       ººººººººººººº
+                  ||
+        (Puerta. Aula-Servidores [bloqueada])
+                  ||
+        +------------------------+
+        |     Aula de Teoría     | === (P. Aula-Taller) === +------------------------+
+        +------------------------+                          |   Taller de Hardware   |
+                                                            +------------------------+
+                                                                      ||
+                                                            (Conex. Taller-Redes)
+                                                                      ||
+                                                            +------------------------+
+                                                            |      Zona de Redes     |
+                                                            +------------------------+`},
   
     Proyector_Techo:{tipo:'Decoracion',nombre:'Proyector del Techo',
-      descripcion:'Un proyector multimedia estándar, apagado.'},
+      descripcion:'Un proyector multimedia estándar.'},
   
     Mesa_Profesor:{
       tipo:'Decoracion',
@@ -78,7 +94,9 @@ A partir de seis sospechosos con varios atributos booleanos (1 = verdadero, 0 = 
       tipo: 'Decoracion',
       nombre: 'Caja de Herramientas',
       descripcion: 'Destornilladores, alicates, crimpadora y otras herramientas.',
-      contenidos: ['Bobina_Cable', 'Alicates', 'Crimpadora', 'Pelacables', 'Conectores_RJ45']
+      contenidos: ['Bobina_Cable', 'Alicates', 'Crimpadora', 'Pelacables', 'Conectores_RJ45'],
+      hito_requerido: 'configuración_switch',
+      mensaje_hito_requerido: 'Emilio dice: oye deja mis cosas, solo los buenos alumnos pueden coger mis cosas.'
     },
 
     // Herramientas y materiales para fabricar el cable
@@ -169,6 +187,7 @@ Compórtate estrictamente como un switch Cisco IOS configurado por defecto y sin
 desde el terminal en modo no privilegiado. 
 Sé minimalista, sin información adicional ni de compilación. 
 Solo ejecuta el comando que el usario te pida (ninguno más).
+El comando de ayuda es "?" o "help" solo imprimirá los comandos disponibles en el nivel actual.
 IMPORTANTE: Al configurar VLAN 10 para "alumnos" en puertos 1–20 
 y VLAN 20 para "profesores" en puertos 21–24, 
 debes emitir "/hito configuración_switch superado". 
@@ -197,8 +216,6 @@ Intenta simplificar el número de comandos, los más importantes para realizar l
     Patch_Panel:{tipo:'Decoracion',nombre:'Patch-Panel',
       descripcion:'Panel con decenas de RJ-45 etiquetados.'},
   
-    Portatil_Tecnico:{tipo:'Decoracion',nombre:'Portátil del Técnico',
-      descripcion:'Consola abierta; el técnico no te deja tocar.'},
     
     Servidor_oracle: {
       tipo: 'Dispositivo',
