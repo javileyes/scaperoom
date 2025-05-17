@@ -796,7 +796,7 @@ export async function process(raw) {
           );
           
           if (currentDialog) {
-            conservarDialogo = currentDialog.conservar_dialogo !== false;
+            conservarDialogo = currentDialog.conservarDialogo !== false;
           }
           
           // Activar el hito
@@ -821,7 +821,7 @@ export async function process(raw) {
               state.conversationHistory = [];
               
               // Mostrar mensaje de transición
-              print(`\n--- ${def.nombre} cambia de actitud... ---`, 'game-message');
+              // print(`\n--- ${def.nombre} cambia de actitud... ---`, 'game-message');
               
 
             } 

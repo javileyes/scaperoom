@@ -242,7 +242,7 @@ Intenta simplificar el número de comandos, los más importantes para realizar l
         }
       },
       estado_requerido: 'online_disconnected', // TODO: Cambiar a 'online_connected' para que funcione
-      mensaje_estado_requerido: 'El ordenador no está conectado físicamente a la red, debes primero conectarlo.',
+      mensaje_estado_requerido: 'El ordenador no está conectado físicamente a la red, debes primero conectarlo con un latiguillo de red.',
       // mensaje_hito_requerido: 'El ordenador no está conectado a la red, primero debes conectarlo.',
       requiere_pass: { usuario: 'quesada', password: 'macarena123' },
           // ── definimos diálogos como en npc.js ──────────────────
@@ -275,7 +275,7 @@ IMPORTANTE: La IP del servidor Oracle es: 10.0.255.254 si consigues hacer ping a
         conservarDialogo: false,
         system_prompt: `Eres un ordenador con sistema operativo linux.
 El usauario para acceder a la base de datos Oracle del departamento, con esquema "enigma" y contraseña "crimen" deberá ejecutar el siguiente comando:
-"sqlplus enigma/crimen@//host:6666/xe"
+"sqlplus enigma/crimen@//10.0.255.254:6666/xe" si pone mal la IP o el puerto o el usuario o contraseña dará un error de acceso.
 IMPORTANTE: Si el usuario configura bien los parámetros de conexión escribirás exactamente "/hito acceso_base_datos superado".`,
         saludo: `Pista: Ahora vamos a conectarnos a la base de datos, usaremos comando: 
         sqlplus usuario/contraseña@//host:puerto/servicio`
