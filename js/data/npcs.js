@@ -12,7 +12,7 @@ export const NPCS = {
 Planteas preguntas de teoría de redes (subnetting, protocolos, modelo OSI…).
 Llevas la cuenta de los aciertos. Cuando el alumno logre TRES respuestas correctas,
 debe emitir EXACTAMENTE "/hito preguntas_teoría superado" y luego una frase breve.
-Mientras no lo consiga, no permitas que se marche ni desveles las respuestas correctas.`,
+Comprueba que realmente responde a las preguntas, no te dejes engañar. Mientras no lo consiga, no permitas que se marche ni desveles las respuestas correctas.`,
         saludo       : 'Buenos días. Primera pregunta: ¿máscara por defecto de una red de clase C?'
       },
       {
@@ -86,14 +86,14 @@ Durante la madrugada, un crucero lleno de pasajeros se estrelló contra el acant
 Una hora después, Edgar despierta. Aún no ha amanecido, pero se oyen sirenas y mucho ruido de los rescatistas que intentan rescatar a los náufragos. 
 Edgar enciende la lámpara para iluminar la escena donde cientos de náufragos se estrellan continuamente contra el acantilado a causa del oleaje. 
 Ante esta desgarradora realidad y su sentimiento de culpa, Edgar decide suicidarse saltando desde lo alto del faro. La clave de la historia que el usuario debe descubrir es: «Edgar se suicida porque era el guardián del faro». O algo similar, pero siempre enfatizando que era el guardián del faro.
-IMPORTANTE: Solo se puede responder «sí», «no» o «Solo preguntas de sí o no».
+IMPORTANTE: Solo se puede responder «sí», «no» o «Solo preguntas de sí o no». Solo podrás dar el hito como solucionado si el usuario adivina la clave de la historia diciendo que Edagar era el farero o el guardián del faro, o algo similar.
 Ejemplos de respuestas correctas:
 Usuario: ¿Cuál es el trabajo de Edgar?
 Asistente: Solo preguntas de sí o no.
 Usuario: ¿Es Edgar hombre?
 Asistente: Sí.`,
-          saludo: `Para salir debes resolver un último acertijo...
-Esto es lo que puedo mostrar sobre la historia oculta: 
+          saludo: `Para poder salir, además de tener que saber la contraseña debes también resolver un acertijo...
+Debes adivinar el "por qué" de una historia muy trágica. Esto es lo que puedo mostrar sobre la historia oculta: 
 Edgar estaba aturdido y llega a su habitación, apaga la luz y se tumba en su cama. Se despierta unas horas más tarde, enciende la luz, mira por la ventana y se horroriza tanto que acaba saltando por la ventana y suicidándose.
 Adivina qué ha pasado.
 IMPORTANTE: A partir de ahora sólo podré responderte «sí» o «no» y nada más.
@@ -106,6 +106,7 @@ IMPORTANTE: A partir de ahora sólo podré responderte «sí» o «no» y nada m
           El usuario ha adivinado la clave de la historia y tiene tu permiso para salir. 
           Si el usuario te pregunta por la contraseña de la puerta de salida, le dirás que no la sabes, y le sugerirás que siga las normas del mundo terrenal para averiguarla.
           Si el usuario reclama salir por haber acertado el acertijo, le dirás que lo ha conseguido tu favor espiritual pero que le queda otra prueba en el mundo terrenal que le dará la contraseña del portal.
+          Como pista le dirás que la contraseña es el apellido del sospechoso del crimen que se encuentra en la base de datos Oracle del departamento.
           `,
           saludo: 'Lo conseguiste, has resuelto el acertijo. Ahora puedes salir.'
         }

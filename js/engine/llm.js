@@ -33,7 +33,7 @@ export async function askLLM(userInput){
     const res = await fetch(getLlmEndpoint(), {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ model:'qwen3-api', messages, temperature:0.7, max_tokens:1000, stream:true })
+      body: JSON.stringify({ model:'api', messages, temperature:0.7, max_tokens:1000, stream:true })
     });
     if(!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     const reader = res.body.getReader(); const decoder = new TextDecoder();

@@ -81,7 +81,7 @@ export const OBJECTS = {
       descripcion:'Una nota de tamaño cuartilla.',
       contenido_detalle:
         `
-        El enigma es descubir quien es el asesino de un cluedo:
+        El enigma es descubir quien es el asesino de un cluedo, el apellido del asesino es la contraseña de la puerta de salida:
 A partir de seis sospechosos con varios atributos booleanos (1 = verdadero, 0 = falso), las pistas del inspector son estas proposiciones:
 	1.	El culpable es zurdo.
 	2.	Ama el jazz.
@@ -206,7 +206,7 @@ y VLAN 20 para "profesores" en puertos 21–24,
 debes emitir "/hito configuracion_switch superado". 
 Intenta simplificar el número de comandos, los más importantes para realizar la tarea encomendada. 
 (enable, exit, configure) y de VLAN/interfaces. `,
-        saludo: 'Consola IOS lista. help o ? para ayuda.'
+        saludo: 'Consola IOS lista. help para ayuda.'
       },
       {
         // tras superar el hito aparece este diálogo
@@ -363,11 +363,12 @@ INSERT INTO sospechosos VALUES
 Switch#show vlan - Display current VLANs
 Switch(config)#vlan 10 - Create a VLAN with the number 10
 Switch(config-vlan)#name sales - Give the VLAN a name “sales”
+Switch(config) interface G0/1 - Enter interface configuration mode for G0/1
 Switch(config-if)#switchport mode access - Set a switch interface to access mode (es el estado por defecto de fábrica, por tanto no es necesario ejecutar este comando a no ser que estuviera en modo trunk y quisieramos cambiarlo a modo access. De fábrica todos los puertos son de tipo access y son de la vlan 1)
 Switch(config-if)#switchport mode trunk - Set a switch interface to trunk mode
 Switch(config-if)#switchport access vlan 10 - Assign an interface to VLAN 10
 Switch(config-if)#switchport trunk allowed vlan 10, 20 – selecciona vlan aceptadas(por defecto acepta todas)
-Switch(config)# interface range f0/0 -15 – Select a range of interfaces to config.
+Switch(config)# interface range G0/1 -15 – Select a range of interfaces to config.
 Switch(config-if-range)# switchport access vlan 10 – set range of interface to vlan 10
 
 Switch#show interfaces switchport – Muestra todas las interfaces y si son de access o trunk y las vlan que pueden etiquetar

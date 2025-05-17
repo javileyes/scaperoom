@@ -178,7 +178,6 @@ function populateTargets2(){ // Para el segundo objetivo de /use obj on target2
 
 function init(){
   print('--- ASIR Room-Escape Web (modular) ---');
-  print('Usando LM-Studio en http://localhost:8000');
   print('Escribe /help para ver los comandos.');
 
   resetGame();
