@@ -23,7 +23,7 @@ export const OBJECTS = {
       // bloqueada ahora solo en state.puzzleStates
       // bloqueada: true,
       hito_requerido: 'misterio_acertijo',
-      mensaje_hito_requerido: 'Una voz fantasmagórica sale del portal: "habla con migo! Debes descubrir un misterio!!".',
+      mensaje_hito_requerido: 'Una voz fantasmagórica se escucha cerca del portal: "habla conmigo! Debes descubrir un misterio!! y tendrás mi permiso espiritual para salir".',
     },
   
     Puerta_Aula_Taller:{tipo:'Pasarela',nombre:'Puerta Aula-Taller',

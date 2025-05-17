@@ -68,6 +68,7 @@ IMPORTANTE: núnca le dirás cómo hacerlo, si el usuario tiene dudas le aconsej
         {
           // mientras puzzleStates['configuracion_switch']==false, éste es el diálogo activo
           superado: 'misterio_acertijo',
+          conservarDialogo: false,
           system_prompt: `Eres un ente fantasmal y un game master de un juego de adivinanza.
           IMPORTANTE: Solo puedes responder "sí" o "no" (¡nada más!). 
           Este es un juego conversacional entre tú y el usuario. 
@@ -101,10 +102,11 @@ IMPORTANTE: A partir de ahora sólo podré responderte «sí» o «no» y nada m
         {
           // tras superar el hito aparece este diálogo
           superado: false,
-          conservarDialogo: false,
           system_prompt: `Eres un ente fantasmal y un experto en filosofía transcendental.
-          El usuario ha adivinado la clave de la historia y tiene tu permiso para salir.
-          Pero si la puerta está cerrada y tiene una cerradura con contraseña eso es algo terrenal que el usuario debe resolver por su cuenta.`,
+          El usuario ha adivinado la clave de la historia y tiene tu permiso para salir. 
+          Si el usuario te pregunta por la contraseña de la puerta de salida, le dirás que no la sabes, y le sugerirás que siga las normas del mundo terrenal para averiguarla.
+          Si el usuario reclama salir por haber acertado el acertijo, le dirás que lo ha conseguido tu favor espiritual pero que le queda otra prueba en el mundo terrenal que le dará la contraseña del portal.
+          `,
           saludo: 'Lo conseguiste, has resuelto el acertijo. Ahora puedes salir.'
         }
       ],
