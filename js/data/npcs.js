@@ -3,7 +3,7 @@ export const NPCS = {
   Javier_ProfesorRedes: {
     nombre      : 'Javier, el profesor de redes',
     rol         : 'Profesor de Redes',
-    descripcion : 'Profesor de FP con gesto severo y un puntero láser.',
+    descripcion : 'Profesor de FP con poco pelo.',
     // Lista de diálogos / estados
     dialogues: [
       {

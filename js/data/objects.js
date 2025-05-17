@@ -19,7 +19,7 @@ export const OBJECTS = {
       nombre: 'Puerta del Oráculo',
       descripcion: 'Puerta metálica gris con teclado numérico.',
       bloqueada: true,
-      requiere_pass: { codigo: 'Mendoza' },
+      requiere_pass: { codigo: 'Pistacho' },
       // bloqueada ahora solo en state.puzzleStates
       // bloqueada: true,
       hito_requerido: 'misterio_acertijo',
@@ -101,7 +101,7 @@ A partir de seis sospechosos con varios atributos booleanos (1 = verdadero, 0 = 
     },
   
     Mesa_Trabajo_1:{tipo:'Decoracion',nombre:'Mesa de Trabajo',
-      descripcion:'Herramientas y componentes de PC esparcidos.'},
+      descripcion:'Herramientas y componentes de PC esparcidos. Nada de utilidad.'},
   
     Caja_Herramientas: {
       tipo: 'Decoracion',
@@ -180,7 +180,7 @@ A partir de seis sospechosos con varios atributos booleanos (1 = verdadero, 0 = 
     },
   
     Armario_Rack:{tipo:'Decoracion',nombre:'Armario Rack',
-      descripcion:'Contiene switches, routers y patch-panels.'},
+      descripcion:'Contiene panels y un switches Cisco con un pequeño portátil haciendo de consola.'},
   
   /* … */
   Switch_Cisco: {
@@ -197,7 +197,7 @@ A partir de seis sospechosos con varios atributos booleanos (1 = verdadero, 0 = 
         superado: 'configuracion_switch',
         system_prompt: `Eres un Switch Cisco IOS. 
 Compórtate estrictamente como un switch Cisco IOS configurado por defecto y sin contraseñas, empezando 
-desde el terminal en modo no privilegiado. 
+desde el terminal en modo privilegiado. 
 Sé minimalista, por cada comando que escriba el usuario responderás únicamente con la salida del comando pedido. 
 Solo ejecuta el comando que el usario te pida (ninguno más).
 El comando de ayuda es "?" o "help" solo imprimirá los comandos disponibles en el nivel actual.
@@ -206,7 +206,8 @@ y VLAN 20 para "profesores" en puertos 21–24,
 debes emitir "/hito configuracion_switch superado". 
 Intenta simplificar el número de comandos, los más importantes para realizar la tarea encomendada. 
 (enable, exit, configure) y de VLAN/interfaces. `,
-        saludo: 'Consola IOS lista. help para ayuda.'
+        saludo: `Consola IOS lista. help para ayuda.
+        Switch#`
       },
       {
         // tras superar el hito aparece este diálogo
@@ -214,7 +215,8 @@ Intenta simplificar el número de comandos, los más importantes para realizar l
         system_prompt: `Eres un Switch Cisco IOS, estás perfectamente configurado. 
         Comportate extrictamente como un switch Cisco IOS configurado por defecto y sin contraseñas, empezando desde el terminal en modo no privilegiado.
         tienes una VLAN 10 para "alumnos" en puertos 1–20  y VLAN 20 para "profesores" en puertos 21–24`,
-        saludo: 'NOTA: La configuración de VLAN está OK, mejor no tocar nada.'
+        saludo: `NOTA: La configuración de VLAN está OK, mejor no tocar nada.
+        Switch#`
       }
     ],
 
