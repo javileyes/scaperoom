@@ -15,8 +15,16 @@ export const ROOMS = {
       nombre:'Cuarto de Servidores',
       descripcion:'El aire aquí es más frío y el zumbido constante...',
       objetos:['Rack_Principal','Servidor_oracle','Ordenador_torre','Latiguillo_Red_Terminado','Nota_enigma'],
+      npcs:['oraculo'],
+      salidas:{ Puerta_Aula_Servidores:{ destino:'Aula_Teoria'}, Puerta_Oraculo:{ destino:'Exterior'} }
+    },
+
+    Exterior : {
+      nombre:'Exterior del Instituto',
+      descripcion:'Lo lograste, has salido del instituto. ¡Enhorabuena!',
+      objetos:[],
       npcs:[],
-      salidas:{ Puerta_Aula_Servidores:{ destino:'Aula_Teoria'} }
+      salidas:{}
     },
   
     Taller_Hardware : {

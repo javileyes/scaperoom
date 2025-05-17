@@ -12,6 +12,19 @@ export const OBJECTS = {
       mensaje_hito_requerido: 'Javier se interpone, habla con Javier para que te deje pasar.'
     
     },
+
+
+    Puerta_Oraculo: {
+      tipo: 'Pasarela',
+      nombre: 'Puerta del Oráculo',
+      descripcion: 'Puerta metálica gris con teclado numérico.',
+      bloqueada: true,
+      requiere_pass: { codigo: 'Mendoza' },
+      // bloqueada ahora solo en state.puzzleStates
+      // bloqueada: true,
+      hito_requerido: 'misterio_acertijo',
+      mensaje_hito_requerido: 'Una voz fantasmagórica sale del portal: "habla con migo! Debes descubrir un misterio!!".',
+    },
   
     Puerta_Aula_Taller:{tipo:'Pasarela',nombre:'Puerta Aula-Taller',
       descripcion:'Puerta de madera standard.',bloqueada:false,

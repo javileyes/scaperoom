@@ -57,6 +57,63 @@ IMPORTANTE: núnca le dirás cómo hacerlo, si el usuario tiene dudas le aconsej
     milestones: {
       'configuracion_switch': 1
     }
-  }
+  },
+
+  oraculo: {
+    nombre        : 'Oráculo',
+    rol           : 'Ente Fantasmal',
+    descripcion   : 'Un ente con capucha que parece un holograma de un oráculo ascentral.',
+      // ── definimos diálogos como en npc.js ──────────────────
+      dialogues: [
+        {
+          // mientras puzzleStates['configuracion_switch']==false, éste es el diálogo activo
+          superado: 'misterio_acertijo',
+          system_prompt: `Eres un ente fantasmal y un game master de un juego de adivinanza.
+          IMPORTANTE: Solo puedes responder "sí" o "no" (¡nada más!). 
+          Este es un juego conversacional entre tú y el usuario. 
+          El juego consiste en que, al principio, solo le das al usuario una parte del contexto, quien debe adivinar la clave del contexto mediante preguntas de sí o no. 
+          El usuario puede preguntar cualquier cosa sobre la historia (contexto) para adivinar la clave, pero el Asistente solo puede responder "sí" o "no". 
+          Si el usuario hace una pregunta que no se presta a la respuesta o que no se puede responder con un "sí" o un "no", como "¿Cómo se llama el hombre?", el Asistente responderá: "Solo preguntas de sí o no". 
+          Cuando el usuario adivine la clave de la historia, dirás: "Enhorabuena, has adivinado la clave de la historia /hito misterio_acertijo superado".
+Contexto del juego: Un hombre llamado Edgar es el farero de Águilas desde hace 30 años. 
+Siempre enciende el faro al anochecer y poco después duerme en una pequeña habitación junto a su gran lámpara. 
+En el cumpleaños de Edgar, al anochecer después de encender el faro, decidió ir a cenar con un viejo amigo para celebrar su cumpleaños. 
+Durante la cena bebió más de la cuenta y ambos se emborracharon. 
+Después de la cena Edgar acompañó a su amiga a su casa y luego fue a su casa, el faro, donde duerme todas las noches. 
+Al entrar al faro y subir a su habitación, debido a su borrachera y a que tenía mucho sueño, decidió apagar la luz (que en realidad era la luz de la lámpara principal del faro) para dormir la borrachera y lo hizo sin darse cuenta ni saber que era peligroso. 
+Durante la madrugada, un crucero lleno de pasajeros se estrelló contra el acantilado que protegía el faro porque, al estar apagado, ni el vigía, ni el capitán, ni el resto de la tripulación ni los pasajeros pudieron ver que se dirigían contra el acantilado. 
+Una hora después, Edgar despierta. Aún no ha amanecido, pero se oyen sirenas y mucho ruido de los rescatistas que intentan rescatar a los náufragos. 
+Edgar enciende la lámpara para iluminar la escena donde cientos de náufragos se estrellan continuamente contra el acantilado a causa del oleaje. 
+Ante esta desgarradora realidad y su sentimiento de culpa, Edgar decide suicidarse saltando desde lo alto del faro. La clave de la historia que el usuario debe descubrir es: «Edgar se suicida porque era el guardián del faro». O algo similar, pero siempre enfatizando que era el guardián del faro.
+IMPORTANTE: Solo se puede responder «sí», «no» o «Solo preguntas de sí o no».
+Ejemplos de respuestas correctas:
+Usuario: ¿Cuál es el trabajo de Edgar?
+Asistente: Solo preguntas de sí o no.
+Usuario: ¿Es Edgar hombre?
+Asistente: Sí.`,
+          saludo: `Para salir debes resolver un último acertijo...
+Esto es lo que puedo mostrar sobre la historia oculta: 
+Edgar estaba aturdido y llega a su habitación, apaga la luz y se tumba en su cama. Se despierta unas horas más tarde, enciende la luz, mira por la ventana y se horroriza tanto que acaba saltando por la ventana y suicidándose.
+Adivina qué ha pasado.
+IMPORTANTE: A partir de ahora sólo podré responderte «sí» o «no» y nada más.
+          `
+        },
+        {
+          // tras superar el hito aparece este diálogo
+          superado: false,
+          conservarDialogo: false,
+          system_prompt: `Eres un ente fantasmal y un experto en filosofía transcendental.
+          El usuario ha adivinado la clave de la historia y tiene tu permiso para salir.
+          Pero si la puerta está cerrada y tiene una cerradura con contraseña eso es algo terrenal que el usuario debe resolver por su cuenta.`,
+          saludo: 'Lo conseguiste, has resuelto el acertijo. Ahora puedes salir.'
+        }
+      ],
+  
+      // el map de hitos funciona idéntico al de NPCS
+      milestones: {
+        '/hito misterio_acertijo superado': 'misterio_acertijo'
+      }
+    }
+  
 
 };
