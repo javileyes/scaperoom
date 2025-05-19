@@ -644,6 +644,54 @@ export function moveTo(destRef, via = '') {
   scrollToBottom();
 }
 
+/* --- reboot (reiniciar conversación actual) --------------------------- */
+export function reboot() {
+  // Solo tiene sentido si hay una conversación activa
+  if (!state.currentNpcRef) {
+    print("No hay una conversación activa para reiniciar.", 'error-message');
+    scrollToBottom();
+    return;
+  }
+
+  // Identificar si estamos hablando con un NPC o usando un dispositivo
+  const isNpc = !!NPCS[state.currentNpcRef];
+  const def = isNpc ? NPCS[state.currentNpcRef] : OBJECTS[state.currentNpcRef];
+  
+  if (!def) {
+    print("Error: No se encuentra la definición de la entidad actual.", 'error-message');
+    scrollToBottom();
+    return;
+  }
+  
+  // Buscar el diálogo aplicable según los hitos completados
+  const dialog = def.dialogues.find(d =>
+    d.superado === false || (d.superado && !getHito(d.superado))
+  );
+  
+  if (!dialog) {
+    print("Error: No se encuentra un diálogo aplicable.", 'error-message');
+    scrollToBottom();
+    return;
+  }
+  
+  // Limpiar el historial de conversación
+  state.conversationHistory = [];
+  
+  // Mostrar mensaje de reinicio
+  print(`\n--- Conversación con ${def.nombre} reiniciada ---`, 'game-message');
+  print(`${def.nombre}: ${dialog.saludo}`, 'ai-response');
+  
+  // Añadir el saludo al historial
+  state.conversationHistory.push({ role: 'assistant', content: dialog.saludo });
+  
+  // Actualizar interfaz
+  updatePrompt();
+  scrollToBottom();
+  if (window.depuracion) updateDebug();
+  
+  // También guardar este historial limpio en el contexto del NPC
+  saveCurrentNpcContext();
+}
 
 /* ============ Entrada de texto principal =============================== */
 export async function process(raw) {
@@ -728,6 +776,7 @@ export async function process(raw) {
   /drop <obj>    – soltar objeto del inventario
   /use <obj> [on <dest>] – usar
   /talk <npc>    – hablar con alguien
+  /reboot        – reiniciar conversación actual
   /inventory     – inventario`,
         'game-message'
       );
@@ -766,7 +815,12 @@ export async function process(raw) {
       talk(cmd.slice(6));
       return;
     }
-
+    
+    if (cmd.startsWith('/reboot')) {
+      reboot();
+      return;
+    }
+    
     if (cmd.startsWith('/go ')) {
       go(cmd.slice(4));
       return;

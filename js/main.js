@@ -7,7 +7,7 @@ import { ROOMS }                      from './data/rooms.js';
 
 const ACTIONS = [
   '/look','/go','/cross','/examine','/take','/drop',
-  '/use','/talk','/inventory','/help'
+  '/use','/talk','/inventory','/reboot', '/help'
 ];
 
 function populateActions(){
@@ -27,6 +27,10 @@ function populateTargets(){
     for(const salida of Object.values(room.salidas||{})){
       opts.push({ref:salida.destino, label:ROOMS[salida.destino].nombre});
     }
+  }
+  else if(act==='/reboot'){
+    // No necesita targets
+    // opts quedará vacío
   }
   else if(act==='/cross'){
     // sólo pasarelas (refs de salida)
@@ -164,6 +168,11 @@ function populateTargets2(){ // Para el segundo objetivo de /use obj on target2
   // Construye el comando en el input según selects
   function updateInputFromSelects(){
     const act  = ui.actionSelect.value.trim();
+    // Si es /reboot, no necesita target
+    if(act === '/reboot') {
+      ui.inputFld.value = act;
+      return;
+    }
     const t1   = ui.targetSelect.value;
     if(!t1){ ui.inputFld.value = act; return; }
     const name1 = OBJECTS[t1]?.nombre || NPCS[t1]?.nombre || t1;
