@@ -9,7 +9,7 @@ export const OBJECTS = {
       requiere_pass: { codigo: '255.255.255.192' },
       bloqueada: true,
       hito_requerido: 'javier_passed',
-      mensaje_hito_requerido: 'Javier se interpone, habla con Javier para que te deje pasar.'
+      mensaje_hito_requerido: 'Javier se interpone, "no tan rápido... tienes que superar un pequeño examen", habla con Javier para que te deje pasar.'
     
     },
 
@@ -29,7 +29,7 @@ export const OBJECTS = {
     Puerta_Aula_Taller:{tipo:'Pasarela',nombre:'Puerta Aula-Taller',
       descripcion:'Puerta de madera standard.',bloqueada:false,
       hito_requerido: 'javier_passed',
-      mensaje_hito_requerido: 'Javier se interpone, habla con Javier para que te deje pasar.'
+      mensaje_hito_requerido: 'Javier se interpone, "no tan rápido... tienes que superar un pequeño examen", habla con Javier para que te deje pasar.'
     },
   
     Conexion_Taller_Redes:{tipo:'Pasarela',nombre:'Conexión Taller-Redes',
@@ -87,8 +87,9 @@ A partir de seis sospechosos con varios atributos booleanos (1 = verdadero, 0 = 
 	2.	Ama el jazz.
 	3.	No tiene coartada.
 	4.	Fuma en pipa o lleva sombrero (exclusiva: exactamente uno de los dos).
-  Pista: usa la consulta SQL para averiguarlo.
-  para ver las tablas de la base de datos:
+  Pista:   Usa una consulta SQL para averiguarlo.
+Accede a la base de datos con esquema "enigma" y contraseña "crimen", el puerto del servidor es "6666" y el servicio es "xe". 
+  Para ver las tablas de la base de datos:
   SELECT table_name FROM user_tables;  
   `,
     },
@@ -252,7 +253,7 @@ Intenta simplificar el número de comandos, los más importantes para realizar l
           necesita: ['Latiguillo_Red_Terminado'], // Requiere el latiguillo para conectarse
         },
         'online_disconnected': {
-          descripcion: 'Torre con tarjeta con luz verde.',
+          descripcion: 'Torre con tarjeta de red con luz verde.',
           siguiente: 'online',      
         }
       },

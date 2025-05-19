@@ -13,6 +13,20 @@ sudo python -m http.server 80
 ssh -R 9011:localhost:80 asir
 ssh -R 9012:localhost:8000 asir
 
+En el ordenador local hacer el keep alive para mantener el tunel tiempo
+Host asir
+    User  tu_usuario
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    ExitOnForwardFailure yes   # aborta si el forward falla
+
+También se podría en lugar de eso (que se hace para toda conexión) hacerlo especificamente para una conexión así:
+ssh -R 9011:localhost:80 asir \
+    -o ServerAliveInterval=60 \
+    -o ServerAliveCountMax=3 \
+    -N           # (opcional) no abrir shell
+    
+
 en navegador ir a: http://asir.javiergimenez.es:9011
 
 El LLM estará en http://asir.javiergimenez.es:9012
